@@ -64,7 +64,7 @@ async function crosspostForUser(user: User) {
   };
 }
 
-export async function POST() {
+export async function GET() {
   try {
     const users = await prisma.user.findMany({
       where: { crosspostEnabled: true },
