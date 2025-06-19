@@ -1,8 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+"use client"
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { NeynarContextProvider, Theme } from "@neynar/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,10 +18,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Noice - Cross-post your tweets to Farcaster",
-  description: "Automatically cross-post your tweets to Farcaster",
-};
+
 
 export default function RootLayout({
   children,
@@ -25,6 +26,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    <NeynarContextProvider
+        settings={{
+          clientId: process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID || "",
+          defaultTheme: Theme.Light,
+          eventsCallbacks: {
+            onAuthSuccess: () => {},
+            onSignout() {},
+          },
+        }}
+      >
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -40,5 +51,6 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
     </html>
+    </NeynarContextProvider>
   );
 }
