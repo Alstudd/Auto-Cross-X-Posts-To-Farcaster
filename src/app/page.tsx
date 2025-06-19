@@ -5,14 +5,14 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Twitter, 
-  MessageCircle, 
-  ArrowRight, 
-  Check, 
-  Settings, 
-  Activity, 
-  Users, 
+import {
+  Twitter,
+  MessageCircle,
+  ArrowRight,
+  Check,
+  Settings,
+  Activity,
+  Users,
   TrendingUp,
   Zap,
   Unlink,
@@ -27,29 +27,31 @@ import {
   Copy,
   CheckCircle,
   AlertCircle,
-  Clock
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { NeynarAuthButton, useNeynarContext } from "@neynar/react";
+import { CrosscastButton } from "@/components/CrosscastButton";
 
 // Mock data for demonstration
 const mockStats = {
   totalPosts: 127,
   crossPosts: 89,
   engagement: 2.4,
-  followers: 1250
+  followers: 1250,
 };
 
 const mockRecentActivity = [
   {
     id: 1,
-    content: "Just launched a new feature! 🚀 Excited to see how the community responds.",
+    content:
+      "Just launched a new feature! 🚀 Excited to see how the community responds.",
     timestamp: "2 hours ago",
     platforms: ["twitter", "farcaster"],
     stats: { likes: 24, reposts: 8, replies: 5 },
-    status: "success"
+    status: "success",
   },
   {
     id: 2,
@@ -57,7 +59,7 @@ const mockRecentActivity = [
     timestamp: "5 hours ago",
     platforms: ["twitter", "farcaster"],
     stats: { likes: 12, reposts: 3, replies: 2 },
-    status: "success"
+    status: "success",
   },
   {
     id: 3,
@@ -65,13 +67,14 @@ const mockRecentActivity = [
     timestamp: "1 day ago",
     platforms: ["twitter"],
     stats: { likes: 18, reposts: 4, replies: 7 },
-    status: "error"
-  }
+    status: "error",
+  },
 ];
 
 export default function Home() {
   const { toast } = useToast();
-  const { user: farcasterUser, isAuthenticated: isFarcasterAuthenticated } = useNeynarContext();
+  const { user: farcasterUser, isAuthenticated: isFarcasterAuthenticated } =
+    useNeynarContext();
   const [twitterUser, setTwitterUser] = useState(null);
   const [isTwitterLoading, setIsTwitterLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -83,7 +86,7 @@ export default function Home() {
 
   const checkTwitterAuth = async () => {
     try {
-      const response = await fetch('/api/auth/twitter/status');
+      const response = await fetch("/api/auth/twitter/status");
       if (response.ok) {
         const data = await response.json();
         if (data.authenticated) {
@@ -91,21 +94,21 @@ export default function Home() {
         }
       }
     } catch (error) {
-      console.error('Error checking Twitter auth:', error);
+      console.error("Error checking Twitter auth:", error);
     }
   };
 
   const handleTwitterConnect = async () => {
     setIsTwitterLoading(true);
     try {
-      const response = await fetch('/api/auth/twitter/login');
+      const response = await fetch("/api/auth/twitter/login");
       const data = await response.json();
-      
+
       if (data.url) {
         window.location.href = data.url;
       }
     } catch (error) {
-      console.error('Error connecting Twitter:', error);
+      console.error("Error connecting Twitter:", error);
       toast({
         title: "Connection Failed",
         description: "Failed to connect to Twitter. Please try again.",
@@ -118,19 +121,20 @@ export default function Home() {
 
   const handleTwitterDisconnect = async () => {
     try {
-      const response = await fetch('/api/auth/twitter/logout', {
-        method: 'POST',
+      const response = await fetch("/api/auth/twitter/logout", {
+        method: "POST",
       });
-      
+
       if (response.ok) {
         setTwitterUser(null);
         toast({
           title: "Disconnected from Twitter",
-          description: "Your Twitter account has been disconnected successfully.",
+          description:
+            "Your Twitter account has been disconnected successfully.",
         });
       }
     } catch (error) {
-      console.error('Error disconnecting Twitter:', error);
+      console.error("Error disconnecting Twitter:", error);
       toast({
         title: "Disconnection Failed",
         description: "Failed to disconnect from Twitter. Please try again.",
@@ -149,15 +153,15 @@ export default function Home() {
 
   const isConnected = isFarcasterAuthenticated && twitterUser;
 
-  const ConnectedAccountCard = ({ platform, user, onDisconnect }:any) => (
+  const ConnectedAccountCard = ({ platform, user, onDisconnect }: any) => (
     <motion.div
       layout
       className="flex items-center justify-between p-4 rounded-xl border bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800"
     >
       <div className="flex items-center space-x-4">
         <div className="relative">
-          <img 
-            src={user.pfp_url || user.profile_image_url || user.avatar} 
+          <img
+            src={user.pfp_url || user.profile_image_url || user.avatar}
             alt={user.display_name || user.name || user.displayName}
             className="w-12 h-12 rounded-full border-2 border-green-400"
           />
@@ -167,7 +171,11 @@ export default function Home() {
         </div>
         <div>
           <div className="flex items-center space-x-2">
-            {platform === "farcaster" ? <MessageCircle className="w-4 h-4 text-purple-600" /> : <Twitter className="w-4 h-4 text-blue-500" />}
+            {platform === "farcaster" ? (
+              <MessageCircle className="w-4 h-4 text-purple-600" />
+            ) : (
+              <Twitter className="w-4 h-4 text-blue-500" />
+            )}
             <h3 className="font-semibold text-gray-900 dark:text-gray-100">
               {user.display_name || user.name || user.displayName}
             </h3>
@@ -188,16 +196,25 @@ export default function Home() {
     </motion.div>
   );
 
-  const StatCard = ({ icon: Icon, label, value, change, color }:any) => (
+  const StatCard = ({ icon: Icon, label, value, change, color }: any) => (
     <Card className="p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-0 shadow-lg">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{label}</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{value}</p>
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            {label}
+          </p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
+            {value}
+          </p>
           {change && (
-            <p className={`text-sm mt-1 flex items-center ${change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <p
+              className={`text-sm mt-1 flex items-center ${
+                change > 0 ? "text-green-600" : "text-red-600"
+              }`}
+            >
               <TrendingUp className="w-3 h-3 mr-1" />
-              {change > 0 ? '+' : ''}{change}%
+              {change > 0 ? "+" : ""}
+              {change}%
             </p>
           )}
         </div>
@@ -208,7 +225,7 @@ export default function Home() {
     </Card>
   );
 
-  const ActivityItem = ({ item }:any) => (
+  const ActivityItem = ({ item }: any) => (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -228,8 +245,18 @@ export default function Home() {
               </div>
             )}
           </div>
-          <div className={`p-1 rounded-full ${item.status === 'success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-            {item.status === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+          <div
+            className={`p-1 rounded-full ${
+              item.status === "success"
+                ? "bg-green-100 text-green-600"
+                : "bg-red-100 text-red-600"
+            }`}
+          >
+            {item.status === "success" ? (
+              <CheckCircle className="w-4 h-4" />
+            ) : (
+              <AlertCircle className="w-4 h-4" />
+            )}
           </div>
         </div>
         <span className="text-xs text-gray-500 flex items-center">
@@ -237,9 +264,11 @@ export default function Home() {
           {item.timestamp}
         </span>
       </div>
-      
-      <p className="text-gray-900 dark:text-gray-100 mb-3 leading-relaxed">{item.content}</p>
-      
+
+      <p className="text-gray-900 dark:text-gray-100 mb-3 leading-relaxed">
+        {item.content}
+      </p>
+
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4 text-sm text-gray-500">
           <span className="flex items-center">
@@ -255,7 +284,11 @@ export default function Home() {
             {item.stats.replies}
           </span>
         </div>
-        <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-600">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-gray-400 hover:text-gray-600"
+        >
           <ExternalLink className="w-4 h-4" />
         </Button>
       </div>
@@ -286,7 +319,9 @@ export default function Home() {
 
         <div className="max-w-md mx-auto">
           <Card className="p-6">
-            <h2 className="text-2xl font-semibold mb-6 text-center">Connect Your Accounts</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-center">
+              Connect Your Accounts
+            </h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 rounded-lg border">
                 <div className="flex items-center space-x-3">
@@ -321,8 +356,8 @@ export default function Home() {
                   </div>
                 </div>
                 {!twitterUser && (
-                  <Button 
-                    onClick={handleTwitterConnect} 
+                  <Button
+                    onClick={handleTwitterConnect}
                     disabled={isTwitterLoading}
                     size="sm"
                   >
@@ -361,12 +396,19 @@ export default function Home() {
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2 px-4 py-2 bg-green-100 dark:bg-green-900/20 rounded-full">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium text-green-700 dark:text-green-400">Active</span>
+            <span className="text-sm font-medium text-green-700 dark:text-green-400">
+              Active
+            </span>
           </div>
           <Button variant="outline" size="sm">
             <Settings className="w-4 h-4 mr-2" />
             Settings
           </Button>
+          <CrosscastButton
+            tweetText="Test tweet"
+            // tweetUrl="Optional tweet URL"
+            signerUuid={farcasterUser?.signer_uuid}
+          />
         </div>
       </motion.div>
 
@@ -378,16 +420,16 @@ export default function Home() {
         className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
       >
         {isFarcasterAuthenticated && (
-          <ConnectedAccountCard 
-            platform="farcaster" 
-            user={farcasterUser} 
+          <ConnectedAccountCard
+            platform="farcaster"
+            user={farcasterUser}
             onDisconnect={handleFarcasterDisconnect}
           />
         )}
         {twitterUser && (
-          <ConnectedAccountCard 
-            platform="twitter" 
-            user={twitterUser} 
+          <ConnectedAccountCard
+            platform="twitter"
+            user={twitterUser}
             onDisconnect={handleTwitterDisconnect}
           />
         )}
@@ -436,7 +478,7 @@ export default function Home() {
         {[
           { id: "overview", label: "Overview", icon: BarChart3 },
           { id: "activity", label: "Recent Activity", icon: Activity },
-          { id: "schedule", label: "Schedule", icon: Calendar }
+          { id: "schedule", label: "Schedule", icon: Calendar },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -467,32 +509,34 @@ export default function Home() {
               <Card className="p-6">
                 <h3 className="text-xl font-semibold mb-6">Quick Actions</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     className="h-24 flex-col space-y-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                    onClick={() => window.open("https://twitter.com/compose/tweet", "_blank")}
+                    onClick={() =>
+                      window.open("https://twitter.com/compose/tweet", "_blank")
+                    }
                   >
                     <Twitter className="w-6 h-6" />
                     <span>Create Tweet</span>
                   </Button>
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     variant="outline"
                     className="h-24 flex-col space-y-2 hover:bg-purple-50 dark:hover:bg-purple-950/20"
                   >
                     <MessageCircle className="w-6 h-6" />
                     <span>View Farcaster</span>
                   </Button>
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     variant="outline"
                     className="h-24 flex-col space-y-2"
                   >
                     <BarChart3 className="w-6 h-6" />
                     <span>Analytics</span>
                   </Button>
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     variant="outline"
                     className="h-24 flex-col space-y-2"
                   >
@@ -502,7 +546,7 @@ export default function Home() {
                 </div>
               </Card>
             </div>
-            
+
             <div>
               <Card className="p-6">
                 <h3 className="text-xl font-semibold mb-4">Today Summary</h3>
@@ -513,11 +557,15 @@ export default function Home() {
                   </div>
                   <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
                     <span className="text-sm font-medium">Engagement</span>
-                    <span className="text-lg font-bold text-green-600">127</span>
+                    <span className="text-lg font-bold text-green-600">
+                      127
+                    </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
                     <span className="text-sm font-medium">New Followers</span>
-                    <span className="text-lg font-bold text-purple-600">12</span>
+                    <span className="text-lg font-bold text-purple-600">
+                      12
+                    </span>
                   </div>
                 </div>
               </Card>
