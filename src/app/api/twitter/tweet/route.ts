@@ -16,14 +16,16 @@ export async function POST(req: NextRequest) {
     }
 
     const client = new TwitterApi(accessToken);
-    
+
     const tweet = await client.v2.tweet(text);
 
     return NextResponse.json({ success: true, tweet });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error posting tweet:", error);
+    const errorMsg =
+      error instanceof Error ? error.message : "Failed to post tweet";
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to post tweet" },
+      { success: false, error: errorMsg },
       { status: 500 }
     );
   }
