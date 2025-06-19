@@ -1,18 +1,15 @@
 import 'dotenv/config';
 import { NeynarAPIClient, Configuration } from '@neynar/nodejs-sdk';
 import axios from 'axios';
-// import fs from 'fs';
 // import { TwitterApi } from 'twitter-api-v2';
 
-// Load users from a JSON file (replace with DB in production)
-// const users = JSON.parse(fs.readFileSync('./users.json', 'utf-8'));
 const users = [
   {
-    twitterUsername: "Alstudd17",
-    twitterUserId: "1746238274237272064",
-    //   "twitterAccessToken": "MVRSMThVamlLVVI3bm5BUmJUWmFoTGhxbDV3bFVBZ1g0bEtfa0YyTWNCV041OjE3NTAzNDA0MjI0NTU6MToxOmF0OjE",
-    farcasterSignerUuid: "cc9bcf76-8427-4347-9f38-0ae40fba595a",
-    lastTweetId: "1921834759899975938",
+    twitterUsername: "username",
+    twitterUserId: "userId",
+    //   "twitterAccessToken": "accessToken",
+    farcasterSignerUuid: "uuid",
+    lastTweetId: "lastTweetId",
     crosspostEnabled: true,
   },
 ];
@@ -90,7 +87,6 @@ async function main() {
   }
   // Save updated lastTweetId
   return users;
-  //   fs.writeFileSync('./users.json', JSON.stringify(users, null, 2));
 }
 
 main();
