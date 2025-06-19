@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Button } from './ui/button';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Button } from "./ui/button";
+import { toast } from "sonner";
 
 interface CrosscastButtonProps {
   tweetText: string;
@@ -8,42 +8,55 @@ interface CrosscastButtonProps {
   signerUuid?: string;
 }
 
-export function CrosscastButton({ tweetText, tweetUrl, signerUuid }: CrosscastButtonProps) {
+export function CrosscastButton({
+  tweetText,
+  tweetUrl,
+  signerUuid,
+}: CrosscastButtonProps) {
   const [isCrosscasting, setIsCrosscasting] = useState(false);
 
   const handleCrosscast = async () => {
-    if (!signerUuid) {
-      toast.error('Please connect your Farcaster account first');
-      return;
-    }
-
+    setIsCrosscasting(true);
     try {
-      setIsCrosscasting(true);
-      
-      const payload = {
-        signerUuid,
-        text: tweetText,
-        ...(tweetUrl && { embeds: [tweetUrl] }),
-      };
-
-      const response = await fetch('/api/farcaster/crosscast', {
-        method: 'POST',
+      // 1. Post to Farcaster
+      const farcasterResponse = await fetch("/api/farcaster/crosscast", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          signerUuid,
+          text: tweetText,
+          ...(tweetUrl && { embeds: [tweetUrl] }),
+        }),
       });
+      const farcasterResult = await farcasterResponse.json();
 
-      const data = await response.json();
+      // 2. Post to Twitter
+      const twitterResponse = await fetch("/api/twitter/tweet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: tweetText }),
+      });
+      const twitterResult = await twitterResponse.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to crosscast');
+      if (!farcasterResult.success || !twitterResult.success) {
+        throw new Error(
+          "Failed to crosscast to " +
+            [
+              !farcasterResult.success && "Farcaster",
+              !twitterResult.success && "Twitter",
+            ]
+              .filter(Boolean)
+              .join(" and ")
+        );
       }
 
-      toast.success('Successfully crosscasted to Farcaster!');
+      toast.success("Successfully crosscasted to Farcaster and Twitter!");
     } catch (error) {
-      console.error('Error crosscasting:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to crosscast');
+      toast.error(
+        error instanceof Error ? error.message : "Failed to crosscast"
+      );
     } finally {
       setIsCrosscasting(false);
     }

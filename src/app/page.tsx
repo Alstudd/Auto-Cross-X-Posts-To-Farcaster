@@ -404,11 +404,11 @@ export default function Home() {
             <Settings className="w-4 h-4 mr-2" />
             Settings
           </Button>
-          <CrosscastButton
+          {/* <CrosscastButton
             tweetText="Test tweet"
             // tweetUrl="Optional tweet URL"
             signerUuid={farcasterUser?.signer_uuid}
-          />
+          /> */}
         </div>
       </motion.div>
 
