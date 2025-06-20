@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import axios from "axios";
 
-interface TwitterTweetData {
-  id: string;
-  text: string;
-  public_metrics: {
-    retweet_count: number;
-    like_count: number;
-    reply_count: number;
-    quote_count: number;
-  };
-  created_at: string;
-}
+// interface TwitterTweetData {
+//   id: string;
+//   text: string;
+//   public_metrics: {
+//     retweet_count: number;
+//     like_count: number;
+//     reply_count: number;
+//     quote_count: number;
+//   };
+//   created_at: string;
+// }
 
 interface FarcasterCastData {
   hash: string;

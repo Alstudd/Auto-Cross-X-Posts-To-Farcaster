@@ -2,16 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import axios from "axios";
 
-interface TwitterApiResponse {
-  data: {
-    public_metrics: {
-      followers_count: number;
-      following_count: number;
-      tweet_count: number;
-      listed_count: number;
-    };
-  };
-}
+// interface TwitterApiResponse {
+//   data: {
+//     public_metrics: {
+//       followers_count: number;
+//       following_count: number;
+//       tweet_count: number;
+//       listed_count: number;
+//     };
+//   };
+// }
 
 interface FarcasterUser {
   follower_count: number;
