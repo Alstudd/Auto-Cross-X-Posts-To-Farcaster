@@ -47,6 +47,8 @@ interface UserStats {
   totalPosts: number;
   crossPosts: number;
   engagementRate: number;
+  twitterFollowers: number;
+  farcasterFollowers: number;
   totalFollowers: number;
   todayPosts: number;
   todayEngagement: number;
@@ -530,7 +532,7 @@ export default function Home() {
               <Zap className="w-10 h-10 text-white" />
             </div>
             <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
-              Noice
+              Noice Crosspost
             </h1>
             <p className="text-xl text-muted-foreground">
               Cross-post your tweets to Farcaster automatically
@@ -707,7 +709,8 @@ export default function Home() {
         <StatCard
           icon={TrendingUp}
           label="Engagement Rate"
-          value={`${userStats?.engagementRate || 0}%`}
+          // value={`${userStats?.engagementRate || 0}%`}
+          value={`0%`}
           color="bg-gradient-to-r from-green-500 to-green-600"
         />
         <StatCard
@@ -799,24 +802,24 @@ export default function Home() {
 
             <div>
               <Card className="p-6">
-                <h3 className="text-xl font-semibold mb-4">Today Summary</h3>
+                <h3 className="text-xl font-semibold mb-4">User Metrics</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
                     <span className="text-sm font-medium">Posts Synced</span>
                     <span className="text-lg font-bold text-blue-600">
-                      {userStats?.todayPosts || 0}
+                      {userStats?.crossPosts || 0}
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                    <span className="text-sm font-medium">Engagement</span>
+                    <span className="text-sm font-medium">Twitter Followers</span>
                     <span className="text-lg font-bold text-green-600">
-                      {userStats?.todayEngagement || 0}
+                      {userStats?.twitterFollowers || 0}
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
-                    <span className="text-sm font-medium">New Followers</span>
+                    <span className="text-sm font-medium">Farcaster Followers</span>
                     <span className="text-lg font-bold text-purple-600">
-                      {userStats?.newFollowersToday || 0}
+                      {userStats?.farcasterFollowers || 0}
                     </span>
                   </div>
                 </div>

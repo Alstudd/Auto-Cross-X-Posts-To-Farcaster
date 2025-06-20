@@ -47,12 +47,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find existing user by farcasterSignerUuid or create new one
+    if (!farcasterFid) {
+      return NextResponse.json(
+        { error: "Farcaster FID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Find existing user by farcasterFid or create new one
     let user = await prisma.user.findFirst({
       where: {
-        farcasterSignerUuid: farcasterSignerUuid,
+        farcasterFid: farcasterFid,
       },
     });
+
+    // Find existing user by farcasterSignerUuid or create new one
+    // let user = await prisma.user.findFirst({
+    //   where: {
+    //     farcasterSignerUuid: farcasterSignerUuid,
+    //   },
+    // });
 
     if (user) {
       // Update existing user

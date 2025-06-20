@@ -34,22 +34,20 @@ async function getTwitterFollowers(
   twitterUserId: string,
 ): Promise<number> {
   try {
-    const response = await fetch(
-      `https://api.twitter.com/2/users/${twitterUserId}?user.fields=public_metrics`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.TWITTER_BEARER_TOKEN}`,
-        },
-      }
-    );
+    // const response = await fetch(
+    //   `https://api.twitter.com/2/users/${twitterUserId}?user.fields=public_metrics`,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${process.env.TWITTER_BEARER_TOKEN}`,
+    //     },
+    //   }
+    // );
 
     // if (!response.ok) return 0;
-    if (!response.ok) {
-      const followers_count = await fetchTwitterFollowers(twitterUserId);
-      return followers_count || 0;
-    }
-    const data: TwitterApiResponse = await response.json();
-    return data.data?.public_metrics?.followers_count || 0;
+    // const data: TwitterApiResponse = await response.json();
+    // return data.data?.public_metrics?.followers_count || 0;
+    const followers_count = await fetchTwitterFollowers(twitterUserId);
+    return followers_count || 0;
   } catch (error) {
     console.error("Error fetching Twitter followers:", error);
     return 0;
@@ -136,6 +134,8 @@ export async function GET(request: NextRequest) {
       totalPosts,
       crossPosts,
       engagementRate,
+      twitterFollowers,
+      farcasterFollowers,
       totalFollowers,
       todayPosts,
       todayEngagement: todayPosts * 5, // Placeholder calculation

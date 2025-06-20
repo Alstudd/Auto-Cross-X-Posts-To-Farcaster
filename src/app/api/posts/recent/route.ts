@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import axios from "axios";
 
 interface TwitterTweetData {
   id: string;
@@ -22,8 +23,19 @@ interface FarcasterCastData {
   };
   replies: {
     count: number;
-  }
+  };
   timestamp: string;
+}
+
+async function fetchTwitterTweetEngagement(tweetId: string) {
+  const url = `https://twitter241.p.rapidapi.com/tweet?pid=${tweetId}`;
+  const headers = {
+    "x-rapidapi-host": "twitter241.p.rapidapi.com",
+    "x-rapidapi-key": process.env.RAPID_API_KEY!,
+  };
+  const response = await axios.get(url, { headers });
+  const tweetData = response.data.tweet;
+  return tweetData;
 }
 
 async function getTwitterTweetEngagement(tweetId: string): Promise<{
@@ -32,25 +44,32 @@ async function getTwitterTweetEngagement(tweetId: string): Promise<{
   replies: number;
 } | null> {
   try {
-    const response = await fetch(
-      `https://api.twitter.com/2/tweets/${tweetId}?tweet.fields=public_metrics`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.TWITTER_BEARER_TOKEN}`,
-        },
-      }
-    );
+    // const response = await fetch(
+    //   `https://api.twitter.com/2/tweets/${tweetId}?tweet.fields=public_metrics`,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${process.env.TWITTER_BEARER_TOKEN}`,
+    //     },
+    //   }
+    // );
 
-    if (!response.ok) return null;
+    // if (!response.ok) return null;
 
-    const data = await response.json();
-    console.log("Twitter data: ", data);
-    const tweet = data.data as TwitterTweetData;
+    // const data = await response.json();
+    // console.log("Twitter data: ", data);
+    // const tweet = data.data as TwitterTweetData;
+    
+    // return {
+    //   likes: tweet.public_metrics?.like_count || 0,
+    //   retweets: tweet.public_metrics?.retweet_count || 0,
+    //   replies: tweet.public_metrics?.reply_count || 0,
+    // };
 
+    const tweet = await fetchTwitterTweetEngagement(tweetId);
     return {
-      likes: tweet.public_metrics?.like_count || 0,
-      retweets: tweet.public_metrics?.retweet_count || 0,
-      replies: tweet.public_metrics?.reply_count || 0,
+      likes: tweet.favorite_count || 0,
+      retweets: (tweet.retweet_count + tweet.quote_count) || 0,
+      replies: tweet.reply_count || 0,
     };
   } catch (error) {
     console.error("Error fetching Twitter engagement:", error);
@@ -145,7 +164,7 @@ export async function GET(request: NextRequest) {
             : null,
         ]);
 
-        console.log("twitter engagement data: ", twitterEngagement)
+        console.log("twitter engagement data: ", twitterEngagement);
 
         // Determine status
         let status: "success" | "error" | "pending" = "success";
