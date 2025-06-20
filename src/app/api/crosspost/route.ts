@@ -19,7 +19,10 @@ async function fetchLatestTweet(user: User) {
         if (content) {
           const tweetId = content.rest_id;
           const tweetText = content.legacy?.full_text;
-          return { tweetId, tweetText };
+          const tweetTimestamp = content.legacy?.created_at
+            ? new Date(content.legacy.created_at)
+            : null;
+          return { tweetId, tweetText, tweetTimestamp };
         }
       }
     }
@@ -30,6 +33,12 @@ async function fetchLatestTweet(user: User) {
 async function crosspostForUser(user: User) {
   const latest = await fetchLatestTweet(user);
   if (!latest || latest.tweetId === user.lastTweetId) return null;
+  if (
+    user.lastTweetTimestamp &&
+    latest.tweetTimestamp &&
+    new Date(latest.tweetTimestamp) <= new Date(user.lastTweetTimestamp)
+  )
+    return null;
 
   // Post to Farcaster
   const neynarClient = new NeynarAPIClient(
@@ -50,10 +59,13 @@ async function crosspostForUser(user: User) {
     },
   });
 
-  // Update lastTweetId
+  // Update lastTweetId and lastTweetTimestamp
   await prisma.user.update({
     where: { id: user.id },
-    data: { lastTweetId: latest.tweetId },
+    data: {
+      lastTweetId: latest.tweetId,
+      lastTweetTimestamp: latest.tweetTimestamp,
+    },
   });
 
   return {

@@ -14,12 +14,13 @@ datasource db {
 }
 
 model User {
-  id                      String   @id @default(auto()) @map("_id") @db.ObjectId
+  id                      String    @id @default(auto()) @map("_id") @db.ObjectId
   twitterUsername         String
-  twitterUserId           String   @unique
+  twitterUserId           String    @unique
   farcasterSignerUuid     String
   lastTweetId             String
-  crosspostEnabled        Boolean  @default(false)
+  lastTweetTimestamp      DateTime?
+  crosspostEnabled        Boolean   @default(false)
   farcasterFid            String?
   farcasterUsername       String?
   farcasterDisplayName    String?
@@ -27,8 +28,8 @@ model User {
   farcasterCustodyAddress String?
   farcasterProfileBio     String?
   posts                   Post[]
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 }
 
 model Post {
