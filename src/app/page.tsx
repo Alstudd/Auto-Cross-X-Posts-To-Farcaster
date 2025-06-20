@@ -606,7 +606,7 @@ export default function Home() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-8"
+        className="md:flex items-center justify-between mb-8"
       >
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent mb-2">
@@ -618,7 +618,7 @@ export default function Home() {
               : "Cross-posting is currently disabled"}
           </p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="md:mt-0 mt-4 flex items-center space-x-3">
           <div
             className={`flex items-center space-x-2 px-4 py-2 rounded-full ${
               userData?.crosspostEnabled
@@ -657,10 +657,10 @@ export default function Home() {
             />
             Refresh
           </Button>
-          <Button variant="outline" size="sm">
+          {/* <Button variant="outline" size="sm">
             <Settings className="w-4 h-4 mr-2" />
             Settings
-          </Button>
+          </Button> */}
         </div>
       </motion.div>
 

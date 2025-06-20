@@ -17,7 +17,10 @@ async function fetchLatestTweet(twitterUserId: string) {
         if (content) {
           const tweetId = content.rest_id;
           const tweetText = content.legacy?.full_text;
-          return { tweetId, tweetText };
+          const tweetTimestamp = content.legacy?.created_at
+            ? new Date(content.legacy.created_at)
+            : null;
+          return { tweetId, tweetText, tweetTimestamp };
         }
       }
     }
@@ -108,6 +111,7 @@ export async function POST(request: NextRequest) {
           twitterUserId,
           twitterUsername,
           lastTweetId: latest?.tweetId || "",
+          lastTweetTimestamp: latest?.tweetTimestamp || null,
           crosspostEnabled: false,
         },
       });
