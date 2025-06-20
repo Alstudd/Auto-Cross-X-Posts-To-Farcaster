@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -29,6 +30,7 @@ import {
   AlertCircle,
   Clock,
   RefreshCw,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -95,6 +97,7 @@ export default function Home() {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   // Initialize user when both accounts are connected
   useEffect(() => {
@@ -160,6 +163,31 @@ export default function Home() {
       setIsLoading(false);
     }
   };
+
+  type SettingsToggleProps = {
+    label: string;
+    enabled: boolean;
+    onChange: (val: boolean) => void;
+  };
+  function SettingsToggle({ label, enabled, onChange }: SettingsToggleProps) {
+    return (
+      <div className="flex items-center justify-between py-3">
+        <span className="text-white">{label}</span>
+        <button
+          onClick={() => onChange(!enabled)}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            enabled ? "bg-blue-500" : "bg-gray-600"
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              enabled ? "translate-x-6" : "translate-x-1"
+            }`}
+          />
+        </button>
+      </div>
+    );
+  }
 
   const loadUserData = async (userId?: string) => {
     try {
@@ -320,90 +348,99 @@ export default function Home() {
   const isConnected = isFarcasterAuthenticated && twitterUser;
 
   const ConnectedAccountCard = ({ platform, user, onDisconnect }: any) => (
-    <motion.div
-      layout
-      className="flex items-center justify-between p-4 rounded-xl border bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800"
-    >
-      <div className="flex items-center space-x-4">
-        <div className="relative">
-          <img
-            src={
-              user.pfp_url ||
-              user.profile_image_url ||
-              user.farcasterPfpUrl ||
-              user.avatar
-            }
-            alt={
-              user.display_name ||
-              user.name ||
-              user.farcasterDisplayName ||
-              user.displayName
-            }
-            className="w-12 h-12 rounded-full border-2 border-green-400"
-          />
-          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center">
-            <Check className="w-3 h-3 text-white" />
+    <Card className=" border-0 shadow-none rounded-2xl p-0 w-full max-w-8xl  mt-8">
+      <div className="flex justify-between items-center px-8 pt-8">
+        <div className="flex items-center space-x-4">
+          <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[#202938]">
+            {platform === "twitter" ? (
+              <Twitter className="w-7 h-7 text-[#8CA3C7]" />
+            ) : (
+              <MessageCircle className="w-7 h-7 text-[#8CA3C7]" />
+            )}
+          </div>
+          <div>
+            <div className="text-lg font-semibold text-black">
+              {platform.charAt(0).toUpperCase() + platform.slice(1)}
+            </div>
+            <div className="text-sm text-[#8CA3C7]">Connected</div>
           </div>
         </div>
-        <div>
-          <div className="flex items-center space-x-2">
-            {platform === "farcaster" ? (
-              <MessageCircle className="w-4 h-4 text-purple-600" />
-            ) : (
-              <Twitter className="w-4 h-4 text-blue-500" />
-            )}
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-              {user.display_name ||
-                user.name ||
-                user.farcasterDisplayName ||
-                user.displayName}
-            </h3>
-          </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            @{user.username || user.screen_name || user.farcasterUsername}
-          </p>
+        <Button
+          variant="ghost"
+          size="lg"
+          onClick={() => onDisconnect(platform)}
+          className="bg-[#202938] text-[#B6C6E3] px-8 py-2 rounded-full font-semibold text-base hover:bg-[#2A3446] hover:text-white"
+        >
+          Disconnect
+        </Button>
+      </div>
+      <div className="flex flex-row  mt-8 px-8">
+        <img
+          src={
+            user.pfp_url ||
+            user.profile_image_url ||
+            user.farcasterPfpUrl ||
+            user.avatar
+          }
+          alt={
+            user.display_name ||
+            user.name ||
+            user.farcasterDisplayName ||
+            user.displayName
+          }
+          className="w-40 h-40 rounded-full border-4 border-[#202938] object-cover shadow-lg"
+        />
+        <div className="ml-10 text-3xl font-bold text-black flex items-center">
+          @{user.username || user.screen_name || user.farcasterUsername}
+        </div>
+        <div className="mt-2 text-lg text-[#8CA3C7]">
+          {user.followers_count ? user.followers_count.toLocaleString() : ""}
+          {user.followers_count && user.friends_count ? " followers · " : ""}
+          {user.friends_count
+            ? user.friends_count.toLocaleString() + " following"
+            : ""}
         </div>
       </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onDisconnect(platform)}
-        className="text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
-      >
-        <Unlink className="w-4 h-4" />
-      </Button>
-    </motion.div>
+    </Card>
   );
 
-  const StatCard = ({ icon: Icon, label, value, change, color }: any) => (
-    <Card className="p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-0 shadow-lg">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            {label}
-          </p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-            {value}
-          </p>
-          {change !== undefined && (
-            <p
-              className={`text-sm mt-1 flex items-center ${
-                change > 0
-                  ? "text-green-600"
-                  : change < 0
-                  ? "text-red-600"
-                  : "text-gray-600"
-              }`}
-            >
-              <TrendingUp className="w-3 h-3 mr-1" />
-              {change > 0 ? "+" : ""}
-              {change}%
-            </p>
-          )}
+  const StatCard = ({
+    icon: Icon,
+    label,
+    value,
+    sublabel,
+
+    changeColor,
+    iconBg,
+  }: {
+    icon: any;
+    label: string;
+    value: string | number;
+    sublabel?: string;
+
+    changeColor?: string;
+    iconBg?: string;
+  }) => (
+    <Card className="relative p-6 bg-[#181A2A] border-0 shadow-lg rounded-xl min-h-[140px] flex flex-col justify-between">
+      <div className="flex justify-between items-start">
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+            iconBg || "bg-blue-600"
+          }`}
+        >
+          <Icon className="w-5 h-5 text-white" />
         </div>
-        <div className={`p-3 rounded-xl ${color}`}>
-          <Icon className="w-6 h-6 text-white" />
+      </div>
+      <div className="mt-4">
+        <div className="text-3xl font-extrabold text-white leading-tight">
+          {value}
         </div>
+        <div className="text-base font-semibold text-white/80 mt-1">
+          {label}
+        </div>
+        {sublabel && (
+          <div className="text-xs text-white/50 mt-1">{sublabel}</div>
+        )}
       </div>
     </Card>
   );
@@ -412,7 +449,7 @@ export default function Home() {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-4 rounded-lg border bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
+      className="p-4 rounded-lg border bg-black text-white hover:shadow-md transition-shadow"
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-2">
@@ -452,9 +489,7 @@ export default function Home() {
         </span>
       </div>
 
-      <p className="text-gray-900 dark:text-gray-100 mb-3 leading-relaxed">
-        {item.content}
-      </p>
+      <p className="text-white mb-3 leading-relaxed">{item.content}</p>
 
       {item.status === "error" && item.errorMessage && (
         <div className="mb-3 p-2 bg-red-50 dark:bg-red-950/20 rounded text-sm text-red-600">
@@ -505,6 +540,14 @@ export default function Home() {
     </motion.div>
   );
 
+  // Add this handler to connect the toggle to the crosspost logic
+  const onToggleCrosspost = async (val: boolean) => {
+    // Only toggle if the value is different
+    if (!!userData?.crosspostEnabled !== val) {
+      await toggleCrosspost();
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
@@ -520,83 +563,141 @@ export default function Home() {
 
   if (!isConnected) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
-        >
-          <div className="mb-6">
-            <div className="w-20 h-20 bg-gradient-to-r from-purple-600 to-blue-500 rounded-full mx-auto flex items-center justify-center mb-4">
-              <Zap className="w-10 h-10 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
-              Noice Crosspost
-            </h1>
-            <p className="text-xl text-muted-foreground">
-              Cross-post your tweets to Farcaster automatically
-            </p>
+      <>
+        <div className="w-full bg-[#F3F0ED] h-screen relative flex flex-col justify-center items-center text-center px-4">
+          {/* Top Left Logo */}
+          <div className="absolute top-14 left-14 text-2xl font-semibold tracking-widest text-black z-50">
+            CROSSPOST
           </div>
-        </motion.div>
-
-        <div className="max-w-md mx-auto">
-          <Card className="p-6">
-            <h2 className="text-2xl font-semibold mb-6 text-center">
-              Connect Your Accounts
-            </h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-lg border">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-full bg-purple-100 text-purple-600">
-                    <MessageCircle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Farcaster</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {isFarcasterAuthenticated ? "Connected" : "Not connected"}
-                    </p>
-                  </div>
-                </div>
-                {!isFarcasterAuthenticated && <NeynarAuthButton />}
-                {isFarcasterAuthenticated && (
-                  <div className="flex items-center text-green-600">
-                    <Check className="w-5 h-5" />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-lg border">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-full bg-blue-100 text-blue-500">
-                    <Twitter className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Twitter</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {twitterUser ? "Connected" : "Not connected"}
-                    </p>
-                  </div>
-                </div>
-                {!twitterUser && (
-                  <Button
-                    onClick={handleTwitterConnect}
-                    disabled={isTwitterLoading}
-                    size="sm"
-                  >
-                    {isTwitterLoading ? "Connecting..." : "Connect"}
-                  </Button>
-                )}
-                {twitterUser && (
-                  <div className="flex items-center text-green-600">
-                    <Check className="w-5 h-5" />
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card>
+          {/* Top Right Get Started Button */}
+          <div className="absolute top-14 right-14 text-lg text-gray-700 text-right z-50">
+            <button
+              onClick={() => setShowModal(true)}
+              className="hover:text-black transition-colors cursor-pointer"
+            >
+              Get Started
+            </button>
+            <div
+              className="mt-1 w-full h-[2px] bg-no-repeat bg-center bg-contain"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='6' viewBox='0 0 60 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 3 Q15 0 30 3 T60 3' fill='transparent' stroke='black' stroke-width='1.2'/%3E%3C/svg%3E")`,
+              }}
+            ></div>
+          </div>
+          {/* Main Message */}
+          <div className="z-50">
+            <h1 className="text-5xl mb-2 text-black">Noice Crosspost</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-10 text-2xl">
+              Sync your tweets to Farcaster automatically
+            </p>
+            <div className="text-2xl animate-bounce text-gray-700">↓</div>
+          </div>
+          {/* Bottom Wave Image */}
+          <img
+            src="https://cdn.prod.website-files.com/56d8a8f1100bc1bb7928eebd/58458c90a39ccfdb4c175922_HECO_LINE_ANIMATION_v04-poster-00001.jpg"
+            alt="Wave pattern"
+            className="absolute bottom-0 left-0 w-full object-cover"
+          />
         </div>
-      </div>
+        {/* Modal */}
+        <AnimatePresence>
+          {showModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowModal(false)}
+              className="fixed inset-0 bg-opacity-50 backdrop-blur-3xl flex items-center justify-center z-[1000]"
+            >
+              <motion.div
+                initial={{ scale: 0.95, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.95, y: 20 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center"
+              >
+                <h2 className="text-2xl font-semibold mb-4 text-black dark:text-white">
+                  Let&apos;s Get You Started
+                </h2>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                  Connect your Twitter and Farcaster accounts to begin
+                  crossposting.
+                </p>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 rounded-lg border">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-full bg-purple-100 text-purple-600">
+                        <MessageCircle className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Farcaster</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {isFarcasterAuthenticated
+                            ? "Connected"
+                            : "Not connected"}
+                        </p>
+                      </div>
+                    </div>
+                    {!isFarcasterAuthenticated && <NeynarAuthButton />}
+                    {isFarcasterAuthenticated && (
+                      <div className="flex items-center text-green-600">
+                        <Check className="w-5 h-5" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 rounded-lg border">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-full bg-blue-100 text-blue-500">
+                        <Twitter className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">Twitter</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {twitterUser ? "Connected" : "Not connected"}
+                        </p>
+                      </div>
+                    </div>
+                    {!twitterUser && (
+                      <Button
+                        onClick={handleTwitterConnect}
+                        disabled={isTwitterLoading}
+                        size="sm"
+                      >
+                        {isTwitterLoading ? "Connecting..." : "Connect"}
+                      </Button>
+                    )}
+                    {twitterUser && (
+                      <div className="flex items-center text-green-600">
+                        <Check className="w-5 h-5" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* Success Message */}
+                {isFarcasterAuthenticated && twitterUser && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
+                  >
+                    <p className="text-green-700 dark:text-green-300 text-sm">
+                      🎉 Both accounts connected! You can now close this modal.
+                    </p>
+                  </motion.div>
+                )}
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="mt-6 px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Close
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </>
     );
   }
 
@@ -609,7 +710,7 @@ export default function Home() {
         className="md:flex items-center justify-between mb-8"
       >
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl font-bold bg-black bg-clip-text text-transparent mb-2">
             Welcome back! 👋
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -664,12 +765,52 @@ export default function Home() {
         </div>
       </motion.div>
 
+      {/* Stats Grid */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+      >
+        <StatCard
+          icon={BarChart3}
+          label="Total Posts"
+          value={userStats?.totalPosts || 0}
+          sublabel="This month"
+          changeColor="text-green-400"
+          iconBg="bg-blue-500"
+        />
+        <StatCard
+          icon={CheckCircle}
+          label="Success Rate"
+          value={userStats ? `${userStats.engagementRate || 0}%` : "0%"}
+          changeColor="text-green-400"
+          iconBg="bg-green-500"
+        />
+        <StatCard
+          icon={TrendingUp}
+          label="Total Engagement"
+          value={userStats?.todayEngagement || 0}
+          sublabel="Likes, shares, comments"
+          changeColor="text-green-400"
+          iconBg="bg-purple-500"
+        />
+        <StatCard
+          icon={Activity}
+          label="Avg. Engagement Rate"
+          value={userStats ? `${userStats.engagementRate || 0}%` : "0%"}
+          sublabel="Per post"
+          changeColor="text-red-400"
+          iconBg="bg-orange-500"
+        />
+      </motion.div>
+
       {/* Connected Accounts */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
+        className="grid grid-cols-1 mb-20 "
       >
         {isFarcasterAuthenticated && farcasterUser && (
           <ConnectedAccountCard
@@ -687,42 +828,48 @@ export default function Home() {
         )}
       </motion.div>
 
-      {/* Stats Grid */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+        exit={{ opacity: 0, y: -20 }}
       >
-        <StatCard
-          icon={Activity}
-          label="Total Posts"
-          value={userStats?.totalPosts || 0}
-          color="bg-gradient-to-r from-blue-500 to-blue-600"
-        />
-        <StatCard
-          icon={Zap}
-          label="Cross-Posts"
-          value={userStats?.crossPosts || 0}
-          color="bg-gradient-to-r from-purple-500 to-purple-600"
-        />
-        <StatCard
-          icon={TrendingUp}
-          label="Engagement Rate"
-          // value={`${userStats?.engagementRate || 0}%`}
-          value={`0%`}
-          color="bg-gradient-to-r from-green-500 to-green-600"
-        />
-        <StatCard
-          icon={Users}
-          label="Total Followers"
-          value={(userStats?.totalFollowers || 0).toLocaleString()}
-          color="bg-gradient-to-r from-orange-500 to-orange-600"
-        />
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold">Recent Activity</h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshData}
+              disabled={isRefreshing}
+            >
+              <RefreshCw
+                className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </Button>
+          </div>
+          <div className="space-y-4">
+            {recentActivity.length > 0 ? (
+              recentActivity.map((item) => (
+                <ActivityItem key={item.id} item={item} />
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <Activity className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">
+                  No recent activity found
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Start tweeting to see your cross-posting activity here
+                </p>
+              </div>
+            )}
+          </div>
+        </Card>
       </motion.div>
 
       {/* Tabs */}
-      <div className="flex space-x-1 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg w-fit">
+      {/* <div className="flex space-x-1 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg w-fit">
         {[
           { id: "overview", label: "Overview", icon: BarChart3 },
           { id: "activity", label: "Recent Activity", icon: Activity },
@@ -741,10 +888,10 @@ export default function Home() {
             <span className="font-medium">{tab.label}</span>
           </button>
         ))}
-      </div>
+      </div> */}
 
       {/* Tab Content */}
-      <AnimatePresence mode="wait">
+      {/* <AnimatePresence mode="wait">
         {activeTab === "overview" && (
           <motion.div
             key="overview"
@@ -811,13 +958,17 @@ export default function Home() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                    <span className="text-sm font-medium">Twitter Followers</span>
+                    <span className="text-sm font-medium">
+                      Twitter Followers
+                    </span>
                     <span className="text-lg font-bold text-green-600">
                       {userStats?.twitterFollowers || 0}
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
-                    <span className="text-sm font-medium">Farcaster Followers</span>
+                    <span className="text-sm font-medium">
+                      Farcaster Followers
+                    </span>
                     <span className="text-lg font-bold text-purple-600">
                       {userStats?.farcasterFollowers || 0}
                     </span>
@@ -893,7 +1044,18 @@ export default function Home() {
             </Card>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence> */}
+
+      <div className="mb-8 mt-20">
+        <h2 className="text-xl font-semibold mb-6">Settings</h2>
+        <div className="bg-black rounded-xl border border-slate-700 p-6">
+          <SettingsToggle
+            label="Cross-post all tweets automatically"
+            enabled={userData?.crosspostEnabled || false}
+            onChange={onToggleCrosspost}
+          />
+        </div>
+      </div>
     </div>
   );
 }
