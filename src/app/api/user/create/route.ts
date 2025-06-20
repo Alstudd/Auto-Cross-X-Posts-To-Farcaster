@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import axios from "axios";
 
-export async function fetchLatestTweet(twitterUserId: string) {
+async function fetchLatestTweet(twitterUserId: string) {
   const url = `https://twitter241.p.rapidapi.com/user-tweets?user=${twitterUserId}&count=1`;
   const headers = {
     "x-rapidapi-host": "twitter241.p.rapidapi.com",

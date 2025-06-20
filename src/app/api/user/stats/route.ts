@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
+import axios from "axios";
 
 interface TwitterApiResponse {
   data: {
@@ -18,7 +18,21 @@ interface FarcasterUser {
   following_count: number;
 }
 
-async function getTwitterFollowers(twitterUserId: string, accessToken: string | undefined): Promise<number> {
+async function fetchTwitterFollowers(twitterUserId: string) {
+  const url = `https://twitter241.p.rapidapi.com/get-users?users=${twitterUserId}`;
+  const headers = {
+    "x-rapidapi-host": "twitter241.p.rapidapi.com",
+    "x-rapidapi-key": process.env.RAPID_API_KEY!,
+  };
+  const response = await axios.get(url, { headers });
+  const followers =
+    response.data.result.data.users[0].result.legacy?.followers_count;
+  return followers;
+}
+
+async function getTwitterFollowers(
+  twitterUserId: string,
+): Promise<number> {
   try {
     const response = await fetch(
       `https://api.twitter.com/2/users/${twitterUserId}?user.fields=public_metrics`,
@@ -29,8 +43,11 @@ async function getTwitterFollowers(twitterUserId: string, accessToken: string | 
       }
     );
 
-    if (!response.ok) return 0;
-
+    // if (!response.ok) return 0;
+    if (!response.ok) {
+      const followers_count = await fetchTwitterFollowers(twitterUserId);
+      return followers_count || 0;
+    }
     const data: TwitterApiResponse = await response.json();
     return data.data?.public_metrics?.followers_count || 0;
   } catch (error) {
@@ -64,8 +81,6 @@ async function getFarcasterFollowers(farcasterFid: string): Promise<number> {
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get("twitter_access_token")?.value;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
 
@@ -92,25 +107,30 @@ export async function GET(request: NextRequest) {
 
     // Calculate stats
     const totalPosts = user.posts.length;
-    const crossPosts = user.posts.filter(post => post.farcasterHash).length;
-    
+    const crossPosts = user.posts.filter((post) => post.farcasterHash).length;
+
     // Get today's stats
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayPosts = user.posts.filter(
-      post => post.createdAt >= today
+      (post) => post.createdAt >= today
     ).length;
 
     // Get follower counts from external APIs
     const [twitterFollowers, farcasterFollowers] = await Promise.all([
-      user.twitterUserId ? getTwitterFollowers(user.twitterUserId, accessToken) : Promise.resolve(0),
-      user.farcasterFid ? getFarcasterFollowers(user.farcasterFid) : Promise.resolve(0),
+      user.twitterUserId
+        ? getTwitterFollowers(user.twitterUserId)
+        : Promise.resolve(0),
+      user.farcasterFid
+        ? getFarcasterFollowers(user.farcasterFid)
+        : Promise.resolve(0),
     ]);
 
     const totalFollowers = twitterFollowers + farcasterFollowers;
 
     // Calculate engagement rate (placeholder - would need actual engagement data)
-    const engagementRate = totalPosts > 0 ? Math.round((crossPosts / totalPosts) * 100) : 0;
+    const engagementRate =
+      totalPosts > 0 ? Math.round((crossPosts / totalPosts) * 100) : 0;
 
     const stats = {
       totalPosts,

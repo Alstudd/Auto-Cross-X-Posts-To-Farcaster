@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
 
 interface TwitterTweetData {
   id: string;
@@ -27,7 +26,7 @@ interface FarcasterCastData {
   timestamp: string;
 }
 
-async function getTwitterTweetEngagement(tweetId: string, accessToken: string | undefined): Promise<{
+async function getTwitterTweetEngagement(tweetId: string): Promise<{
   likes: number;
   retweets: number;
   replies: number;
@@ -112,8 +111,6 @@ function formatTimeAgo(date: Date): string {
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get("twitter_access_token")?.value;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
     const limit = parseInt(searchParams.get("limit") || "10");
@@ -142,7 +139,7 @@ export async function GET(request: NextRequest) {
 
         // Fetch engagement data
         const [twitterEngagement, farcasterEngagement] = await Promise.all([
-          getTwitterTweetEngagement(post.tweetId, accessToken),
+          getTwitterTweetEngagement(post.tweetId),
           post.farcasterHash
             ? getFarcasterCastEngagement(post.farcasterHash)
             : null,
