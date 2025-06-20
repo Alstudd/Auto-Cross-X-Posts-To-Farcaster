@@ -28,6 +28,7 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -35,49 +36,70 @@ import { useToast } from "@/components/ui/use-toast";
 import { NeynarAuthButton, useNeynarContext } from "@neynar/react";
 import { CrosscastButton } from "@/components/CrosscastButton";
 
-// Mock data for demonstration
-const mockStats = {
-  totalPosts: 127,
-  crossPosts: 89,
-  engagement: 2.4,
-  followers: 1250,
-};
+interface TwitterUser {
+  id: string;
+  id_str?: string;
+  screen_name?: string;
+  username?: string;
+}
 
-const mockRecentActivity = [
-  {
-    id: 1,
-    content:
-      "Just launched a new feature! 🚀 Excited to see how the community responds.",
-    timestamp: "2 hours ago",
-    platforms: ["twitter", "farcaster"],
-    stats: { likes: 24, reposts: 8, replies: 5 },
-    status: "success",
-  },
-  {
-    id: 2,
-    content: "Working on some exciting updates for the weekend...",
-    timestamp: "5 hours ago",
-    platforms: ["twitter", "farcaster"],
-    stats: { likes: 12, reposts: 3, replies: 2 },
-    status: "success",
-  },
-  {
-    id: 3,
-    content: "Failed to post to Farcaster - API rate limit exceeded",
-    timestamp: "1 day ago",
-    platforms: ["twitter"],
-    stats: { likes: 18, reposts: 4, replies: 7 },
-    status: "error",
-  },
-];
+interface UserStats {
+  totalPosts: number;
+  crossPosts: number;
+  engagementRate: number;
+  totalFollowers: number;
+  todayPosts: number;
+  todayEngagement: number;
+  newFollowersToday: number;
+}
+
+interface RecentActivity {
+  id: string;
+  content: string;
+  timestamp: string;
+  platforms: string[];
+  tweetUrl?: string;
+  farcasterUrl?: string;
+  stats: {
+    twitterLikes?: number;
+    twitterRetweets?: number;
+    twitterReplies?: number;
+    farcasterLikes?: number;
+    farcasterRecasts?: number;
+    farcasterReplies?: number;
+  };
+  status: "success" | "error" | "pending";
+  errorMessage?: string;
+}
+
+interface UserData {
+  id: string;
+  twitterUsername: string;
+  farcasterUsername?: string;
+  farcasterDisplayName?: string;
+  farcasterPfpUrl?: string;
+  crosspostEnabled: boolean;
+}
 
 export default function Home() {
   const { toast } = useToast();
   const { user: farcasterUser, isAuthenticated: isFarcasterAuthenticated } =
     useNeynarContext();
-  const [twitterUser, setTwitterUser] = useState(null);
+  const [twitterUser, setTwitterUser] = useState<TwitterUser | null>(null);
   const [isTwitterLoading, setIsTwitterLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Initialize user when both accounts are connected
+  useEffect(() => {
+    if (isFarcasterAuthenticated && farcasterUser && twitterUser) {
+      initializeUser();
+    }
+  }, [isFarcasterAuthenticated, farcasterUser, twitterUser]);
 
   // Check Twitter authentication status on component mount
   useEffect(() => {
@@ -95,6 +117,72 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error checking Twitter auth:", error);
+    }
+  };
+
+  const initializeUser = async () => {
+    if (!farcasterUser || !twitterUser) return;
+
+    setIsLoading(true);
+    try {
+      // Update or create user with both Farcaster and Twitter data
+      const response = await fetch("/api/user/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          farcasterSignerUuid: farcasterUser.signer_uuid,
+          farcasterFid: farcasterUser.fid?.toString(),
+          farcasterUsername: farcasterUser.username,
+          farcasterDisplayName: farcasterUser.display_name,
+          farcasterPfpUrl: farcasterUser.pfp_url,
+          farcasterCustodyAddress: farcasterUser.custody_address,
+          farcasterProfileBio: farcasterUser.profile?.bio?.text,
+          twitterUserId: twitterUser.id_str || twitterUser.id,
+          twitterUsername: twitterUser.screen_name || twitterUser.username,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserData(data.user);
+        await loadUserData(data.user.id);
+      }
+    } catch (error) {
+      console.error("Error initializing user:", error);
+      toast({
+        title: "Error",
+        description: "Failed to initialize user data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadUserData = async (userId?: string) => {
+    try {
+      const userIdToUse = userId || userData?.id;
+      if (!userIdToUse) return;
+
+      // Load user stats
+      const statsResponse = await fetch(
+        `/api/user/stats?userId=${userIdToUse}`
+      );
+      if (statsResponse.ok) {
+        const stats = await statsResponse.json();
+        setUserStats(stats);
+      }
+
+      // Load recent activity
+      const activityResponse = await fetch(
+        `/api/posts/recent?userId=${userIdToUse}`
+      );
+      if (activityResponse.ok) {
+        const activity = await activityResponse.json();
+        setRecentActivity(activity);
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
     }
   };
 
@@ -127,6 +215,11 @@ export default function Home() {
 
       if (response.ok) {
         setTwitterUser(null);
+        // Update user in database to remove Twitter connection
+        // await fetch("/api/user/disconnect-twitter", {
+        //   method: "POST",
+        // });
+
         toast({
           title: "Disconnected from Twitter",
           description:
@@ -143,12 +236,76 @@ export default function Home() {
     }
   };
 
-  const handleFarcasterDisconnect = () => {
-    // Neynar handles disconnect internally
-    toast({
-      title: "Disconnected from Farcaster",
-      description: "Your Farcaster account has been disconnected successfully.",
-    });
+  const handleFarcasterDisconnect = async () => {
+    try {
+      // Update user in database to remove Farcaster connection
+      // await fetch("/api/user/disconnect-farcaster", {
+      //   method: "POST",
+      // });
+
+      setUserData(null);
+      toast({
+        title: "Disconnected from Farcaster",
+        description:
+          "Your Farcaster account has been disconnected successfully.",
+      });
+    } catch (error) {
+      console.error("Error disconnecting Farcaster:", error);
+    }
+  };
+
+  const toggleCrosspost = async () => {
+    if (!userData) return;
+
+    try {
+      const response = await fetch("/api/user/toggle-crosspost", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: !userData.crosspostEnabled, userId: userData.id }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserData({ ...userData, crosspostEnabled: data.enabled });
+        toast({
+          title: data.enabled
+            ? "Crossposting Enabled"
+            : "Crossposting Disabled",
+          description: data.enabled
+            ? "Your tweets will now be automatically posted to Farcaster"
+            : "Automatic crossposting has been disabled",
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling crosspost:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update crosspost settings",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const refreshData = async () => {
+    setIsRefreshing(true);
+    try {
+      if (userData) {
+        await loadUserData(userData.id);
+      }
+      toast({
+        title: "Data Refreshed",
+        description: "Your stats and activity have been updated",
+      });
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      toast({
+        title: "Refresh Failed",
+        description: "Failed to refresh data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const isConnected = isFarcasterAuthenticated && twitterUser;
@@ -161,8 +318,18 @@ export default function Home() {
       <div className="flex items-center space-x-4">
         <div className="relative">
           <img
-            src={user.pfp_url || user.profile_image_url || user.avatar}
-            alt={user.display_name || user.name || user.displayName}
+            src={
+              user.pfp_url ||
+              user.profile_image_url ||
+              user.farcasterPfpUrl ||
+              user.avatar
+            }
+            alt={
+              user.display_name ||
+              user.name ||
+              user.farcasterDisplayName ||
+              user.displayName
+            }
             className="w-12 h-12 rounded-full border-2 border-green-400"
           />
           <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center">
@@ -177,11 +344,14 @@ export default function Home() {
               <Twitter className="w-4 h-4 text-blue-500" />
             )}
             <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-              {user.display_name || user.name || user.displayName}
+              {user.display_name ||
+                user.name ||
+                user.farcasterDisplayName ||
+                user.displayName}
             </h3>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            @{user.username || user.screen_name}
+            @{user.username || user.screen_name || user.farcasterUsername}
           </p>
         </div>
       </div>
@@ -206,10 +376,14 @@ export default function Home() {
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
             {value}
           </p>
-          {change && (
+          {change !== undefined && (
             <p
               className={`text-sm mt-1 flex items-center ${
-                change > 0 ? "text-green-600" : "text-red-600"
+                change > 0
+                  ? "text-green-600"
+                  : change < 0
+                  ? "text-red-600"
+                  : "text-gray-600"
               }`}
             >
               <TrendingUp className="w-3 h-3 mr-1" />
@@ -225,7 +399,7 @@ export default function Home() {
     </Card>
   );
 
-  const ActivityItem = ({ item }: any) => (
+  const ActivityItem = ({ item }: { item: RecentActivity }) => (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -249,13 +423,17 @@ export default function Home() {
             className={`p-1 rounded-full ${
               item.status === "success"
                 ? "bg-green-100 text-green-600"
-                : "bg-red-100 text-red-600"
+                : item.status === "error"
+                ? "bg-red-100 text-red-600"
+                : "bg-yellow-100 text-yellow-600"
             }`}
           >
             {item.status === "success" ? (
               <CheckCircle className="w-4 h-4" />
-            ) : (
+            ) : item.status === "error" ? (
               <AlertCircle className="w-4 h-4" />
+            ) : (
+              <Clock className="w-4 h-4" />
             )}
           </div>
         </div>
@@ -269,31 +447,67 @@ export default function Home() {
         {item.content}
       </p>
 
+      {item.status === "error" && item.errorMessage && (
+        <div className="mb-3 p-2 bg-red-50 dark:bg-red-950/20 rounded text-sm text-red-600">
+          {item.errorMessage}
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4 text-sm text-gray-500">
           <span className="flex items-center">
             <Heart className="w-4 h-4 mr-1" />
-            {item.stats.likes}
+            {(item.stats.twitterLikes || 0) + (item.stats.farcasterLikes || 0)}
           </span>
           <span className="flex items-center">
             <Repeat2 className="w-4 h-4 mr-1" />
-            {item.stats.reposts}
+            {(item.stats.twitterRetweets || 0) +
+              (item.stats.farcasterRecasts || 0)}
           </span>
           <span className="flex items-center">
             <MessageSquare className="w-4 h-4 mr-1" />
-            {item.stats.replies}
+            {(item.stats.twitterReplies || 0) +
+              (item.stats.farcasterReplies || 0)}
           </span>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-gray-400 hover:text-gray-600"
-        >
-          <ExternalLink className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center space-x-2">
+          {item.tweetUrl && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-400 hover:text-blue-500"
+              onClick={() => window.open(item.tweetUrl, "_blank")}
+            >
+              <Twitter className="w-4 h-4" />
+            </Button>
+          )}
+          {item.farcasterUrl && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-400 hover:text-purple-500"
+              onClick={() => window.open(item.farcasterUrl, "_blank")}
+            >
+              <MessageCircle className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
     </motion.div>
   );
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-600" />
+          <p className="text-gray-600 dark:text-gray-400">
+            Loading your dashboard...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isConnected) {
     return (
@@ -390,25 +604,54 @@ export default function Home() {
             Welcome back! 👋
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Your cross-posting is active and running smoothly
+            {userData?.crosspostEnabled
+              ? "Your cross-posting is active and running smoothly"
+              : "Cross-posting is currently disabled"}
           </p>
         </div>
         <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-2 px-4 py-2 bg-green-100 dark:bg-green-900/20 rounded-full">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium text-green-700 dark:text-green-400">
-              Active
+          <div
+            className={`flex items-center space-x-2 px-4 py-2 rounded-full ${
+              userData?.crosspostEnabled
+                ? "bg-green-100 dark:bg-green-900/20"
+                : "bg-gray-100 dark:bg-gray-800"
+            }`}
+          >
+            <div
+              className={`w-2 h-2 rounded-full ${
+                userData?.crosspostEnabled
+                  ? "bg-green-500 animate-pulse"
+                  : "bg-gray-400"
+              }`}
+            ></div>
+            <span
+              className={`text-sm font-medium ${
+                userData?.crosspostEnabled
+                  ? "text-green-700 dark:text-green-400"
+                  : "text-gray-600 dark:text-gray-400"
+              }`}
+            >
+              {userData?.crosspostEnabled ? "Active" : "Inactive"}
             </span>
           </div>
+          <Button variant="outline" size="sm" onClick={toggleCrosspost}>
+            {userData?.crosspostEnabled ? "Disable" : "Enable"} Crosspost
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshData}
+            disabled={isRefreshing}
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </Button>
           <Button variant="outline" size="sm">
             <Settings className="w-4 h-4 mr-2" />
             Settings
           </Button>
-          {/* <CrosscastButton
-            tweetText="Test tweet"
-            // tweetUrl="Optional tweet URL"
-            signerUuid={farcasterUser?.signer_uuid}
-          /> */}
         </div>
       </motion.div>
 
@@ -419,7 +662,7 @@ export default function Home() {
         transition={{ delay: 0.1 }}
         className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
       >
-        {isFarcasterAuthenticated && (
+        {isFarcasterAuthenticated && farcasterUser && (
           <ConnectedAccountCard
             platform="farcaster"
             user={farcasterUser}
@@ -435,7 +678,6 @@ export default function Home() {
         )}
       </motion.div>
 
-      {/* Rest of the component remains the same... */}
       {/* Stats Grid */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -446,29 +688,25 @@ export default function Home() {
         <StatCard
           icon={Activity}
           label="Total Posts"
-          value={mockStats.totalPosts}
-          change={12}
+          value={userStats?.totalPosts || 0}
           color="bg-gradient-to-r from-blue-500 to-blue-600"
         />
         <StatCard
           icon={Zap}
           label="Cross-Posts"
-          value={mockStats.crossPosts}
-          change={8}
+          value={userStats?.crossPosts || 0}
           color="bg-gradient-to-r from-purple-500 to-purple-600"
         />
         <StatCard
           icon={TrendingUp}
           label="Engagement Rate"
-          value={`${mockStats.engagement}%`}
-          change={5}
+          value={`${userStats?.engagementRate || 0}%`}
           color="bg-gradient-to-r from-green-500 to-green-600"
         />
         <StatCard
           icon={Users}
           label="Total Followers"
-          value={mockStats.followers.toLocaleString()}
-          change={15}
+          value={(userStats?.totalFollowers || 0).toLocaleString()}
           color="bg-gradient-to-r from-orange-500 to-orange-600"
         />
       </motion.div>
@@ -523,6 +761,9 @@ export default function Home() {
                     size="lg"
                     variant="outline"
                     className="h-24 flex-col space-y-2 hover:bg-purple-50 dark:hover:bg-purple-950/20"
+                    onClick={() =>
+                      window.open("https://warpcast.com/", "_blank")
+                    }
                   >
                     <MessageCircle className="w-6 h-6" />
                     <span>View Farcaster</span>
@@ -531,6 +772,7 @@ export default function Home() {
                     size="lg"
                     variant="outline"
                     className="h-24 flex-col space-y-2"
+                    onClick={() => setActiveTab("activity")}
                   >
                     <BarChart3 className="w-6 h-6" />
                     <span>Analytics</span>
@@ -539,6 +781,7 @@ export default function Home() {
                     size="lg"
                     variant="outline"
                     className="h-24 flex-col space-y-2"
+                    onClick={() => setActiveTab("schedule")}
                   >
                     <Calendar className="w-6 h-6" />
                     <span>Schedule Post</span>
@@ -553,18 +796,20 @@ export default function Home() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
                     <span className="text-sm font-medium">Posts Synced</span>
-                    <span className="text-lg font-bold text-blue-600">5</span>
+                    <span className="text-lg font-bold text-blue-600">
+                      {userStats?.todayPosts || 0}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
                     <span className="text-sm font-medium">Engagement</span>
                     <span className="text-lg font-bold text-green-600">
-                      127
+                      {userStats?.todayEngagement || 0}
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
                     <span className="text-sm font-medium">New Followers</span>
                     <span className="text-lg font-bold text-purple-600">
-                      12
+                      {userStats?.newFollowersToday || 0}
                     </span>
                   </div>
                 </div>
@@ -583,15 +828,36 @@ export default function Home() {
             <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold">Recent Activity</h3>
-                <Button variant="outline" size="sm">
-                  <Eye className="w-4 h-4 mr-2" />
-                  View All
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={refreshData}
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 mr-2 ${
+                      isRefreshing ? "animate-spin" : ""
+                    }`}
+                  />
+                  Refresh
                 </Button>
               </div>
               <div className="space-y-4">
-                {mockRecentActivity.map((item) => (
-                  <ActivityItem key={item.id} item={item} />
-                ))}
+                {recentActivity.length > 0 ? (
+                  recentActivity.map((item) => (
+                    <ActivityItem key={item.id} item={item} />
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <Activity className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-600 dark:text-gray-400">
+                      No recent activity found
+                    </p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Start tweeting to see your cross-posting activity here
+                    </p>
+                  </div>
+                )}
               </div>
             </Card>
           </motion.div>
@@ -610,9 +876,9 @@ export default function Home() {
               <p className="text-gray-600 dark:text-gray-400 mb-6">
                 Plan and schedule your cross-posts in advance
               </p>
-              <Button size="lg">
+              <Button size="lg" disabled>
                 <Calendar className="w-4 h-4 mr-2" />
-                Create Schedule
+                Coming Soon
               </Button>
             </Card>
           </motion.div>
