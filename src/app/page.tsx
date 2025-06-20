@@ -91,7 +91,7 @@ export default function Home() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Initialize user when both accounts are connected

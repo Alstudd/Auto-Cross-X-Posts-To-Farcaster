@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-"use client"
+"use client";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -18,8 +18,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,30 +25,30 @@ export default function RootLayout({
 }>) {
   return (
     <NeynarContextProvider
-        settings={{
-          clientId: process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID || "",
-          defaultTheme: Theme.Light,
-          eventsCallbacks: {
-            onAuthSuccess: () => {},
-            onSignout() {},
-          },
-        }}
-      >
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+      settings={{
+        clientId: process.env.NEXT_PUBLIC_NEYNAR_CLIENT_ID || "",
+        defaultTheme: Theme.Light,
+        eventsCallbacks: {
+          onAuthSuccess: () => {},
+          onSignout() {},
+        },
+      }}
+    >
+      <html lang="en" suppressHydrationWarning>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          {children}
-          <Toaster />
-        </ThemeProvider>
-      </body>
-    </html>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster />
+          </ThemeProvider>
+        </body>
+      </html>
     </NeynarContextProvider>
   );
 }
