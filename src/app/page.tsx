@@ -1010,6 +1010,11 @@ export default function Home() {
                     tweetText={crosscastText}
                     // tweetUrl="Optional tweet URL"
                     signerUuid={farcasterUser?.signer_uuid}
+                    onSuccess={() => {
+                      setCrosscastText("");
+                      setShowCreatePostModal(false);
+                      refreshData();
+                    }}
                   />
                   {/* <Button className="cursor-pointer bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-full shadow-lg shadow-purple-600/20">
                     Post

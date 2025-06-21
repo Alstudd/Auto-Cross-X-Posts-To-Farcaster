@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
-import { prisma } from "@/lib/prisma";
 
 interface CrosscastButtonProps {
   userId: string | undefined;
   tweetText: string;
   tweetUrl?: string;
   signerUuid?: string;
+  onSuccess?: () => void;
 }
 
 export function CrosscastButton({
@@ -15,6 +15,7 @@ export function CrosscastButton({
   tweetText,
   tweetUrl,
   signerUuid,
+  onSuccess,
 }: CrosscastButtonProps) {
   const [isCrosscasting, setIsCrosscasting] = useState(false);
 
@@ -47,38 +48,41 @@ export function CrosscastButton({
         body: JSON.stringify({ text: tweetText }),
       });
       const twitterResult = await twitterResponse.json();
-      console.log("tweety: ", twitterResult);
 
-      if (!farcasterResult.success || !twitterResult.success) {
+      // 3. Create Post
+      const postResponse = await fetch("/api/posts/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: userId,
+          tweetId: twitterResult.tweet.id,
+          tweetText: tweetText,
+          farcasterHash: farcasterResult.cast.hash,
+        }),
+      });
+      const postResult = await postResponse.json();
+
+      if (
+        !farcasterResult.success ||
+        !twitterResult.success ||
+        !postResult.success
+      ) {
         throw new Error(
           "Failed to crosspost to " +
             [
               !farcasterResult.success && "Farcaster",
               !twitterResult.success && "Twitter",
+              !postResult.success && "Create Post Error",
             ]
               .filter(Boolean)
               .join(" and ")
         );
       }
 
-      const post = await prisma.post.create({
-        data: {
-          userId: userId,
-          tweetId: twitterResult.tweet.id,
-          tweetText: tweetText,
-          farcasterHash: farcasterResult.cast.hash ?? null,
-        },
-      });
-
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          lastTweetId: twitterResult.id,
-          lastTweetTimestamp: post.createdAt,
-        },
-      });
-
       toast.success("Successfully crossposted to Farcaster and Twitter!");
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to crosspost"
@@ -97,10 +101,10 @@ export function CrosscastButton({
       className="cursor-pointer bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-full shadow-lg shadow-purple-600/20"
     >
       {isCrosscasting ? (
-        <>
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        <div className="flex items-center gap-1">
+          {/* <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> */}
           Crossposting...
-        </>
+        </div>
       ) : (
         <div className="flex items-center gap-1">
           <svg
