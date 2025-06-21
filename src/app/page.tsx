@@ -675,7 +675,7 @@ export default function Home() {
                 className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl"
               >
                 <h2 className="text-3xl font-light mb-2 text-black text-center">
-                  Let Get Started
+                  Let&apos;s Get Started
                 </h2>
                 <p className="text-gray-600 mb-8 text-center leading-relaxed">
                   Connect your accounts to begin seamless crossposting between
