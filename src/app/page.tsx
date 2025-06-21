@@ -581,9 +581,9 @@ export default function Home() {
               className="max-w-4xl"
             >
               <h1 className="text-6xl md:text-7xl lg:text-8xl font-light text-black mb-8 leading-tight">
-                We sync your tweets to
+                We auto sync your tweets to
                 <br />
-                <span className="font-normal">Farcaster automatically</span>
+                <span className="font-normal">Farcaster</span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
                 Create dynamic cross-platform presence that helps your content reach new audiences.
@@ -601,14 +601,12 @@ export default function Home() {
           </div>
 
           {/* Animated Wave Graphics */}
-          <motion.div style={{ y: y1 }} className="absolute bottom-0 left-0 right-0 h-1/2 overflow-hidden">
-            <svg className="absolute bottom-0 w-full h-full" viewBox="0 0 1200 600" preserveAspectRatio="none">
-              <defs>
-                <pattern id="wavePattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M0 20 Q10 10 20 20 T40 20" fill="none" stroke="black" strokeWidth="0.5" opacity="0.3" />
-                </pattern>
-              </defs>
-
+          <motion.div className="absolute bottom-0 left-0 right-0 h-1/2 overflow-hidden">
+            <svg
+              className="absolute bottom-0 w-full h-full"
+              viewBox="0 0 1200 600"
+              preserveAspectRatio="none"
+            >
               {/* Main flowing waves */}
               <motion.path
                 initial={{ pathLength: 0 }}
@@ -634,20 +632,6 @@ export default function Home() {
                 fill="black"
                 opacity="0.5"
               />
-
-              {/* Detailed line work */}
-              {Array.from({ length: 20 }).map((_, i) => (
-                <motion.path
-                  key={i}
-                  initial={{ pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 0.2 }}
-                  transition={{ duration: 2, delay: 1 + i * 0.1 }}
-                  d={`M${i * 60} ${420 + Math.sin(i) * 20} Q${i * 60 + 30} ${400 + Math.sin(i + 1) * 20} ${i * 60 + 60} ${420 + Math.sin(i + 2) * 20}`}
-                  fill="none"
-                  stroke="black"
-                  strokeWidth="1"
-                />
-              ))}
             </svg>
           </motion.div>
         </div>

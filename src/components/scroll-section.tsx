@@ -71,48 +71,46 @@ export default function ScrollSections() {
       if (!isFullyInView) return
   
       const handleWheel = (e: WheelEvent) => {
-
-                // If we're on the first section and scrolling up, allow normal scroll to hero
-      if (currentSection === 0 && e.deltaY < 0) {
-        setIsFullyInView(false) // This will disable scroll hijacking
-        return // Allow normal scroll behavior
-      }
+        // If we're on the first section and scrolling up, allow normal scroll to hero
+        if (currentSection === 0 && e.deltaY < 0) {
+          setIsFullyInView(false) // This will disable scroll hijacking
+          return // Allow normal scroll behavior
+        }
         e.preventDefault()
   
         if (isScrolling) return
-
   
-
+        const newSection = currentSection + Math.sign(e.deltaY)
   
-        setIsScrolling(true)
-  
-        if (e.deltaY > 0 && currentSection < sections.length - 1) {
-          setCurrentSection((prev) => prev + 1)
-        } else if (e.deltaY < 0 && currentSection > 0) {
-          setCurrentSection((prev) => prev - 1)
+        if (newSection >= 0 && newSection < sections.length) {
+          setIsScrolling(true)
+          setCurrentSection(newSection)
+          setTimeout(() => setIsScrolling(false), 1000)
         }
-  
-        setTimeout(() => setIsScrolling(false), 1000)
       }
   
       const handleKeyDown = (e: KeyboardEvent) => {
-
         if (currentSection === 0 && e.key === "ArrowUp") {
-            setIsFullyInView(false) // This will disable scroll hijacking
-            return // Allow normal scroll behavior
-          }
-
-          
+          setIsFullyInView(false) // This will disable scroll hijacking
+          return // Allow normal scroll behavior
+        }
+  
         if (isScrolling) return
   
-        if (e.key === "ArrowDown" && currentSection < sections.length - 1) {
-          setIsScrolling(true)
-          setCurrentSection((prev) => prev + 1)
-          setTimeout(() => setIsScrolling(false), 1000)
-        } else if (e.key === "ArrowUp" && currentSection > 0) {
-          setIsScrolling(true)
-          setCurrentSection((prev) => prev - 1)
-          setTimeout(() => setIsScrolling(false), 1000)
+        if (e.key === "ArrowDown") {
+          const newSection = currentSection + 1
+          if (newSection < sections.length) {
+            setIsScrolling(true)
+            setCurrentSection(newSection)
+            setTimeout(() => setIsScrolling(false), 1000)
+          }
+        } else if (e.key === "ArrowUp") {
+          const newSection = currentSection - 1
+          if (newSection >= 0) {
+            setIsScrolling(true)
+            setCurrentSection(newSection)
+            setTimeout(() => setIsScrolling(false), 1000)
+          }
         }
       }
   
