@@ -901,7 +901,7 @@ export default function Home() {
             className="bg-gray-900/80 border border-gray-800 rounded-2xl p-6"
           >
             <h3 className="text-xl font-semibold text-white mb-4">
-              This Week's Stats
+              User Stats
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatCard
@@ -931,14 +931,14 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* Recent Activity */}
+          {/* Post Activity */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0, transition: { delay: 0.4 } }}
             className="lg:col-span-8 space-y-4"
           >
             <h3 className="text-xl font-semibold text-white mb-4">
-              Recent Activity
+              Post Activity
             </h3>
             <div className="space-y-4">
               {recentActivity.length > 0 ? (
