@@ -87,7 +87,7 @@ interface UserData {
 
 export default function Home() {
   const { toast } = useToast();
-  const { user: farcasterUser, isAuthenticated: isFarcasterAuthenticated } =
+  const { user: farcasterUser, isAuthenticated: isFarcasterAuthenticated, logoutUser: logoutFarcasterUser } =
     useNeynarContext();
   const [twitterUser, setTwitterUser] = useState<TwitterUser | null>(null);
   const [isTwitterLoading, setIsTwitterLoading] = useState(false);
@@ -219,6 +219,7 @@ export default function Home() {
       });
 
       if (response.ok) {
+        setUserData(null);
         setTwitterUser(null);
         // Update user in database to remove Twitter connection
         // await fetch("/api/user/disconnect-twitter", {
@@ -253,6 +254,7 @@ export default function Home() {
       // });
 
       setUserData(null);
+      logoutFarcasterUser();
       toast({
         title: "Disconnected from Farcaster",
         description:
