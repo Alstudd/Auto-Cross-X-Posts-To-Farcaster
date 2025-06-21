@@ -5,7 +5,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+} from "framer-motion";
 import {
   Twitter,
   MessageCircle,
@@ -31,6 +36,7 @@ import {
   Clock,
   RefreshCw,
   Loader2,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -88,32 +94,35 @@ interface UserData {
 
 export default function Home() {
   const { toast } = useToast();
-  const { user: farcasterUser, isAuthenticated: isFarcasterAuthenticated, logoutUser: logoutFarcasterUser } =
-    useNeynarContext();
+  const {
+    user: farcasterUser,
+    isAuthenticated: isFarcasterAuthenticated,
+    logoutUser: logoutFarcasterUser,
+  } = useNeynarContext();
   const [twitterUser, setTwitterUser] = useState<TwitterUser | null>(null);
   const [isTwitterLoading, setIsTwitterLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [crosscastText, setCrosscastText] = useState("");
   const [userData, setUserData] = useState<UserData | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showCreatePostModal, setShowCreatePostModal] = useState(false);
 
-
-  const { scrollY } = useScroll()
-  const y1 = useTransform(scrollY, [0, 1000], [0, -200])
-  const y2 = useTransform(scrollY, [0, 1000], [0, -100])
-  const opacity = useTransform(scrollY, [0, 300], [1, 0])
+  const { scrollY } = useScroll();
+  const y1 = useTransform(scrollY, [0, 1000], [0, -200]);
+  const y2 = useTransform(scrollY, [0, 1000], [0, -100]);
+  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
   useEffect(() => {
     // Smooth scrolling
     const handleScroll = () => {
-      document.documentElement.style.scrollBehavior = "smooth"
-    }
+      document.documentElement.style.scrollBehavior = "smooth";
+    };
 
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Initialize user when both accounts are connected
   useEffect(() => {
@@ -341,171 +350,164 @@ export default function Home() {
   const isConnected = isFarcasterAuthenticated && twitterUser;
 
   const ConnectedAccountCard = ({ platform, user, onDisconnect }: any) => (
-    <motion.div
-      layout
-      className="flex items-center justify-between p-4 rounded-xl border bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800"
-    >
-      <div className="flex items-center space-x-4">
-        <div className="relative">
-          <img
-            src={
-              user.pfp_url ||
-              user.profile_image_url ||
-              user.farcasterPfpUrl ||
-              user.avatar
-            }
-            alt={
-              user.display_name ||
+    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-colors">
+      <div className="flex items-center space-x-3">
+        <img
+          src={
+            user.pfp_url ||
+            user.profile_image_url ||
+            user.farcasterPfpUrl ||
+            user.avatar
+          }
+          alt={
+            user.display_name ||
+            user.name ||
+            user.farcasterDisplayName ||
+            user.displayName
+          }
+          className="w-10 h-10 rounded-full"
+        />
+        <div>
+          <h4 className="font-semibold text-white">
+            {user.display_name ||
               user.name ||
               user.farcasterDisplayName ||
-              user.displayName
-            }
-            className="w-12 h-12 rounded-full border-2 border-green-400"
-          />
-          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center">
-            <Check className="w-3 h-3 text-white" />
-          </div>
-        </div>
-        <div>
-          <div className="flex items-center space-x-2">
-            {platform === "farcaster" ? (
-              <MessageCircle className="w-4 h-4 text-purple-600" />
-            ) : (
-              <Twitter className="w-4 h-4 text-blue-500" />
-            )}
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-              {user.display_name ||
-                user.name ||
-                user.farcasterDisplayName ||
-                user.displayName}
-            </h3>
-          </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+              user.displayName}
+          </h4>
+          <p className="text-sm text-gray-400">
             @{user.username || user.screen_name || user.farcasterUsername}
           </p>
         </div>
       </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onDisconnect(platform)}
-        className="text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
-      >
-        <Unlink className="w-4 h-4" />
-      </Button>
-    </motion.div>
+      <div className="flex items-center space-x-2">
+        {platform === "farcaster" ? (
+          <MessageCircle className="w-5 h-5 text-purple-400" />
+        ) : (
+          <Twitter className="w-5 h-5 text-blue-400" />
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onDisconnect(platform)}
+          className="cursor-pointer text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-full p-2"
+        >
+          <Unlink className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
   );
 
-  const StatCard = ({ icon: Icon, label, value, change, color }: any) => (
-    <Card className="p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border-0 shadow-lg">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            {label}
-          </p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-            {value}
-          </p>
-          {change !== undefined && (
-            <p
-              className={`text-sm mt-1 flex items-center ${
-                change > 0
-                  ? "text-green-600"
-                  : change < 0
-                  ? "text-red-600"
-                  : "text-gray-600"
-              }`}
-            >
-              <TrendingUp className="w-3 h-3 mr-1" />
-              {change > 0 ? "+" : ""}
-              {change}%
-            </p>
-          )}
+  const StatCard = ({ icon: Icon, label, value, change, color }: any) => {
+    const colorClasses = {
+      blue: {
+        bg: "bg-blue-500/10",
+        text: "text-blue-400",
+      },
+      purple: {
+        bg: "bg-purple-500/10",
+        text: "text-purple-400",
+      },
+      green: {
+        bg: "bg-green-500/10",
+        text: "text-green-400",
+      },
+      orange: {
+        bg: "bg-orange-500/10",
+        text: "text-orange-400",
+      },
+    };
+    const colors =
+      colorClasses[color as keyof typeof colorClasses] || colorClasses.blue;
+
+    return (
+      <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl flex items-start space-x-3">
+        <div className={`p-2 rounded-lg ${colors.bg}`}>
+          <Icon className={`w-5 h-5 ${colors.text}`} />
         </div>
-        <div className={`p-3 rounded-xl ${color}`}>
-          <Icon className="w-6 h-6 text-white" />
+        <div>
+          <p className="text-sm text-gray-400">{label}</p>
+          <p className="text-xl font-bold text-white">{value}</p>
         </div>
       </div>
-    </Card>
-  );
+    );
+  };
 
   const ActivityItem = ({ item }: { item: RecentActivity }) => (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="p-4 rounded-lg border bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
+      // initial={{ opacity: 0, y: 20 }}
+      // animate={{ opacity: 1, y: 0 }}
+      className="bg-gray-900 border border-gray-800 rounded-2xl p-5 transition-all hover:border-gray-700"
     >
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <div className="flex space-x-1">
+        <div className="flex items-center space-x-3">
+          <div className="flex -space-x-2">
             {item.platforms.includes("twitter") && (
-              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                <Twitter className="w-3 h-3 text-white" />
+              <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center border-2 border-gray-800">
+                <Twitter className="w-4 h-4 text-blue-400" />
               </div>
             )}
             {item.platforms.includes("farcaster") && (
-              <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
-                <MessageCircle className="w-3 h-3 text-white" />
+              <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center border-2 border-gray-800">
+                <MessageCircle className="w-4 h-4 text-purple-400" />
               </div>
             )}
           </div>
-          <div
-            className={`p-1 rounded-full ${
+          <span
+            className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${
               item.status === "success"
-                ? "bg-green-100 text-green-600"
+                ? "bg-green-500/10 text-green-400"
                 : item.status === "error"
-                ? "bg-red-100 text-red-600"
-                : "bg-yellow-100 text-yellow-600"
+                ? "bg-red-500/10 text-red-400"
+                : "bg-yellow-500/10 text-yellow-400"
             }`}
           >
-            {item.status === "success" ? (
-              <CheckCircle className="w-4 h-4" />
-            ) : item.status === "error" ? (
-              <AlertCircle className="w-4 h-4" />
-            ) : (
-              <Clock className="w-4 h-4" />
-            )}
-          </div>
+            {item.status}
+          </span>
         </div>
         <span className="text-xs text-gray-500 flex items-center">
-          <Clock className="w-3 h-3 mr-1" />
+          <Clock className="w-3 h-3 mr-1.5" />
           {item.timestamp}
         </span>
       </div>
 
-      <p className="text-gray-900 dark:text-gray-100 mb-3 leading-relaxed">
-        {item.content}
-      </p>
+      <p className="text-gray-300 mb-4 leading-relaxed">{item.content}</p>
 
       {item.status === "error" && item.errorMessage && (
-        <div className="mb-3 p-2 bg-red-50 dark:bg-red-950/20 rounded text-sm text-red-600">
+        <div className="mb-4 p-3 bg-red-500/10 rounded-lg text-sm text-red-400">
           {item.errorMessage}
         </div>
       )}
 
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4 text-sm text-gray-500">
-          <span className="flex items-center">
-            <Heart className="w-4 h-4 mr-1" />
-            {(item.stats.twitterLikes || 0) + (item.stats.farcasterLikes || 0)}
+        <div className="flex items-center space-x-5 text-sm text-gray-400">
+          <span className="flex items-center space-x-1.5 hover:text-white transition-colors">
+            <Heart className="w-4 h-4" />
+            <span>
+              {(item.stats.twitterLikes || 0) +
+                (item.stats.farcasterLikes || 0)}
+            </span>
           </span>
-          <span className="flex items-center">
-            <Repeat2 className="w-4 h-4 mr-1" />
-            {(item.stats.twitterRetweets || 0) +
-              (item.stats.farcasterRecasts || 0)}
+          <span className="flex items-center space-x-1.5 hover:text-white transition-colors">
+            <Repeat2 className="w-4 h-4" />
+            <span>
+              {(item.stats.twitterRetweets || 0) +
+                (item.stats.farcasterRecasts || 0)}
+            </span>
           </span>
-          <span className="flex items-center">
-            <MessageSquare className="w-4 h-4 mr-1" />
-            {(item.stats.twitterReplies || 0) +
-              (item.stats.farcasterReplies || 0)}
+          <span className="flex items-center space-x-1.5 hover:text-white transition-colors">
+            <MessageSquare className="w-4 h-4" />
+            <span>
+              {(item.stats.twitterReplies || 0) +
+                (item.stats.farcasterReplies || 0)}
+            </span>
           </span>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1">
           {item.tweetUrl && (
             <Button
               variant="ghost"
-              size="sm"
-              className="text-gray-400 hover:text-blue-500"
+              size="icon"
+              className="cursor-pointer text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 w-8 h-8"
               onClick={() => window.open(item.tweetUrl, "_blank")}
             >
               <Twitter className="w-4 h-4" />
@@ -514,8 +516,8 @@ export default function Home() {
           {item.farcasterUrl && (
             <Button
               variant="ghost"
-              size="sm"
-              className="text-gray-400 hover:text-purple-500"
+              size="icon"
+              className="cursor-pointer text-gray-500 hover:text-purple-400 hover:bg-purple-500/10 w-8 h-8"
               onClick={() => window.open(item.farcasterUrl, "_blank")}
             >
               <MessageCircle className="w-4 h-4" />
@@ -545,7 +547,10 @@ export default function Home() {
         {/* Hero Section */}
         <div className="w-full bg-[#F5F2EE] min-h-screen relative overflow-hidden">
           {/* Parallax Background Elements */}
-          <motion.div style={{ y: y1 }} className="absolute inset-0 pointer-events-none">
+          <motion.div
+            style={{ y: y1 }}
+            className="absolute inset-0 pointer-events-none"
+          >
             <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-black/10 rounded-full"></div>
             <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-black/5 rounded-full"></div>
           </motion.div>
@@ -555,7 +560,9 @@ export default function Home() {
             style={{ opacity }}
             className="absolute top-0 left-0 right-0 z-50 flex justify-between items-center p-14"
           >
-            <div className="text-2xl font-bold tracking-[0.2em] text-black">CROSSPOST</div>
+            <div className="text-2xl font-bold tracking-[0.2em] text-black">
+              CROSSPOST
+            </div>
             <div className="text-right">
               <button
                 onClick={() => setShowModal(true)}
@@ -563,8 +570,18 @@ export default function Home() {
               >
                 Get Started
                 <div className="absolute -bottom-1 left-0 w-full h-[2px] bg-black transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left">
-                  <svg width="100%" height="2" viewBox="0 0 100 2" className="absolute top-0 left-0">
-                    <path d="M0 1 Q25 0 50 1 T100 1" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                  <svg
+                    width="100%"
+                    height="2"
+                    viewBox="0 0 100 2"
+                    className="absolute top-0 left-0"
+                  >
+                    <path
+                      d="M0 1 Q25 0 50 1 T100 1"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
                   </svg>
                 </div>
               </button>
@@ -586,7 +603,8 @@ export default function Home() {
                 <span className="font-normal">Farcaster</span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-                Create dynamic cross-platform presence that helps your content reach new audiences.
+                Create dynamic cross-platform presence that helps your content
+                reach new audiences.
               </p>
             </motion.div>
 
@@ -636,406 +654,372 @@ export default function Home() {
           </motion.div>
         </div>
 
-
         <ScrollSections />
 
-      {/* Modal */}
-      <AnimatePresence>
-        {showModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowModal(false)}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[1000]"
-          >
+        {/* Modal */}
+        <AnimatePresence>
+          {showModal && (
             <motion.div
-              initial={{ scale: 0.9, y: 20, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.9, y: 20, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowModal(false)}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[1000]"
             >
-              <h2 className="text-3xl font-light mb-2 text-black text-center">Let Get Started</h2>
-              <p className="text-gray-600 mb-8 text-center leading-relaxed">
-                Connect your accounts to begin seamless crossposting between platforms.
-              </p>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-6 rounded-2xl border border-gray-100 bg-gray-50/50">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-3 rounded-full bg-purple-100">
-                      <MessageCircle className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-black">Farcaster</h3>
-                      <p className="text-sm text-gray-500">
-                        {isFarcasterAuthenticated ? "Connected" : "Not connected"}
-                      </p>
-                    </div>
-                  </div>
-                  {!isFarcasterAuthenticated && <NeynarAuthButton className="text-white bg-black rounded-xl px-2 cursor-pointer" />}
-                  {isFarcasterAuthenticated && (
-                    <div className="flex items-center text-green-600">
-                      <Check className="w-5 h-5" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between p-6 rounded-2xl border border-gray-100 bg-gray-50/50">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-3 rounded-full bg-blue-100">
-                      <Twitter className="w-5 h-5 text-blue-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-black">Twitter</h3>
-                      <p className="text-sm text-gray-500">{twitterUser ? "Connected" : "Not connected"}</p>
-                    </div>
-                  </div>
-                  {!twitterUser && (
-                    <Button
-                      onClick={handleTwitterConnect}
-                      disabled={isTwitterLoading}
-                      size="sm"
-                      className="bg-black text-white hover:bg-gray-800 cursor-pointer"
-                    >
-                      {isTwitterLoading ? "Connecting..." : "Connect"}
-                    </Button>
-                  )}
-                  {twitterUser && (
-                    <div className="flex items-center text-green-600">
-                      <Check className="w-5 h-5" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Success Message */}
-              {isFarcasterAuthenticated && twitterUser && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-6 p-4 bg-green-50 rounded-2xl border border-green-100"
-                >
-                  <p className="text-green-700 text-sm text-center">
-                    🎉 Both accounts connected! Youre ready to start crossposting.
-                  </p>
-                </motion.div>
-              )}
-
-              <button
-                onClick={() => setShowModal(false)}
-                className="mt-8 w-full py-3 bg-gray-100 text-gray-700 rounded-2xl hover:bg-gray-200 transition-colors font-medium"
+              <motion.div
+                initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                exit={{ scale: 0.9, y: 20, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl"
               >
-                Close
-              </button>
+                <h2 className="text-3xl font-light mb-2 text-black text-center">
+                  Let Get Started
+                </h2>
+                <p className="text-gray-600 mb-8 text-center leading-relaxed">
+                  Connect your accounts to begin seamless crossposting between
+                  platforms.
+                </p>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-6 rounded-2xl border border-gray-100 bg-gray-50/50">
+                    <div className="flex items-center space-x-4">
+                      <div className="p-3 rounded-full bg-purple-100">
+                        <MessageCircle className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-black">Farcaster</h3>
+                        <p className="text-sm text-gray-500">
+                          {isFarcasterAuthenticated
+                            ? "Connected"
+                            : "Not connected"}
+                        </p>
+                      </div>
+                    </div>
+                    {!isFarcasterAuthenticated && (
+                      <NeynarAuthButton
+                        label="Connect"
+                        icon={<div key="#"></div>}
+                        className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-8 pr-3 pl-2 bg-black text-white hover:bg-gray-800 cursor-pointer"
+                      />
+                    )}
+                    {isFarcasterAuthenticated && (
+                      <div className="flex items-center text-green-600">
+                        <Check className="w-5 h-5" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between p-6 rounded-2xl border border-gray-100 bg-gray-50/50">
+                    <div className="flex items-center space-x-4">
+                      <div className="p-3 rounded-full bg-blue-100">
+                        <Twitter className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-black">Twitter</h3>
+                        <p className="text-sm text-gray-500">
+                          {twitterUser ? "Connected" : "Not connected"}
+                        </p>
+                      </div>
+                    </div>
+                    {!twitterUser && (
+                      <Button
+                        onClick={handleTwitterConnect}
+                        disabled={isTwitterLoading}
+                        size="sm"
+                        className="bg-black text-white hover:bg-gray-800 cursor-pointer"
+                      >
+                        {isTwitterLoading ? "Connecting..." : "Connect"}
+                      </Button>
+                    )}
+                    {twitterUser && (
+                      <div className="flex items-center text-green-600">
+                        <Check className="w-5 h-5" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Success Message */}
+                {isFarcasterAuthenticated && twitterUser && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 p-4 bg-green-50 rounded-2xl border border-green-100"
+                  >
+                    <p className="text-green-700 text-sm text-center">
+                      🎉 Both accounts connected! Youre ready to start
+                      crossposting.
+                    </p>
+                  </motion.div>
+                )}
+
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="mt-8 w-full py-3 bg-gray-100 text-gray-700 rounded-2xl hover:bg-gray-200 transition-colors font-medium"
+                >
+                  Close
+                </button>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
       </>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="md:flex items-center justify-between mb-8"
-      >
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent mb-2">
-            Welcome back! 👋
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            {userData?.crosspostEnabled
-              ? "Your cross-posting is active and running smoothly"
-              : "Cross-posting is currently disabled"}
-          </p>
-        </div>
-        <div className="md:mt-0 mt-4 flex items-center space-x-3">
-          <div
-            className={`flex items-center space-x-2 px-4 py-2 rounded-full ${
-              userData?.crosspostEnabled
-                ? "bg-green-100 dark:bg-green-900/20"
-                : "bg-gray-100 dark:bg-gray-800"
-            }`}
-          >
-            <div
-              className={`w-2 h-2 rounded-full ${
-                userData?.crosspostEnabled
-                  ? "bg-green-500 animate-pulse"
-                  : "bg-gray-400"
-              }`}
-            ></div>
-            <span
-              className={`text-sm font-medium ${
-                userData?.crosspostEnabled
-                  ? "text-green-700 dark:text-green-400"
-                  : "text-gray-600 dark:text-gray-400"
-              }`}
-            >
-              {userData?.crosspostEnabled ? "Active" : "Inactive"}
-            </span>
-          </div>
-          <Button variant="outline" size="sm" onClick={toggleCrosspost}>
-            {userData?.crosspostEnabled ? "Disable" : "Enable"} Crosspost
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refreshData}
-            disabled={isRefreshing}
-          >
-            <RefreshCw
-              className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
-          {/* <Button variant="outline" size="sm">
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
-          </Button> */}
-        </div>
-      </motion.div>
-
-      {/* Connected Accounts */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
-      >
-        {isFarcasterAuthenticated && farcasterUser && (
-          <ConnectedAccountCard
-            platform="farcaster"
-            user={farcasterUser}
-            onDisconnect={handleFarcasterDisconnect}
-          />
-        )}
-        {twitterUser && (
-          <ConnectedAccountCard
-            platform="twitter"
-            user={twitterUser}
-            onDisconnect={handleTwitterDisconnect}
-          />
-        )}
-      </motion.div>
-
-      {/* Stats Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-      >
-        <StatCard
-          icon={Activity}
-          label="Total Posts"
-          value={userStats?.totalPosts || 0}
-          color="bg-gradient-to-r from-blue-500 to-blue-600"
-        />
-        <StatCard
-          icon={Zap}
-          label="Cross-Posts"
-          value={userStats?.crossPosts || 0}
-          color="bg-gradient-to-r from-purple-500 to-purple-600"
-        />
-        <StatCard
-          icon={TrendingUp}
-          label="Engagement Rate"
-          // value={`${userStats?.engagementRate || 0}%`}
-          value={`0%`}
-          color="bg-gradient-to-r from-green-500 to-green-600"
-        />
-        <StatCard
-          icon={Users}
-          label="Total Followers"
-          value={(userStats?.totalFollowers || 0).toLocaleString()}
-          color="bg-gradient-to-r from-orange-500 to-orange-600"
-        />
-      </motion.div>
-
-      {/* Tabs */}
-      <div className="flex space-x-1 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg w-fit">
-        {[
-          { id: "overview", label: "Overview", icon: BarChart3 },
-          { id: "activity", label: "Recent Activity", icon: Activity },
-          { id: "schedule", label: "Schedule", icon: Calendar },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all ${
-              activeTab === tab.id
-                ? "bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-gray-100"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-            }`}
-          >
-            <tab.icon className="w-4 h-4" />
-            <span className="font-medium">{tab.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Tab Content */}
-      <AnimatePresence mode="wait">
-        {activeTab === "overview" && (
-          <motion.div
-            key="overview"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-8"
-          >
-            <div className="lg:col-span-2">
-              <Card className="p-6">
-                <h3 className="text-xl font-semibold mb-6">Quick Actions</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button
-                    size="lg"
-                    className="h-24 flex-col space-y-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                    onClick={() =>
-                      window.open("https://twitter.com/compose/tweet", "_blank")
-                    }
-                  >
-                    <Twitter className="w-6 h-6" />
-                    <span>Create Tweet</span>
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="h-24 flex-col space-y-2 hover:bg-purple-50 dark:hover:bg-purple-950/20"
-                    onClick={() =>
-                      window.open("https://warpcast.com/", "_blank")
-                    }
-                  >
-                    <MessageCircle className="w-6 h-6" />
-                    <span>View Farcaster</span>
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="h-24 flex-col space-y-2"
-                    onClick={() => setActiveTab("activity")}
-                  >
-                    <BarChart3 className="w-6 h-6" />
-                    <span>Analytics</span>
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="h-24 flex-col space-y-2"
-                    onClick={() => setActiveTab("schedule")}
-                  >
-                    <Calendar className="w-6 h-6" />
-                    <span>Schedule Post</span>
-                  </Button>
-                </div>
-              </Card>
-            </div>
-
-            <div>
-              <Card className="p-6">
-                <h3 className="text-xl font-semibold mb-4">User Metrics</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                    <span className="text-sm font-medium">Posts Synced</span>
-                    <span className="text-lg font-bold text-blue-600">
-                      {userStats?.crossPosts || 0}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                    <span className="text-sm font-medium">
-                      Twitter Followers
-                    </span>
-                    <span className="text-lg font-bold text-green-600">
-                      {userStats?.twitterFollowers || 0}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
-                    <span className="text-sm font-medium">
-                      Farcaster Followers
-                    </span>
-                    <span className="text-lg font-bold text-purple-600">
-                      {userStats?.farcasterFollowers || 0}
-                    </span>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === "activity" && (
-          <motion.div
-            key="activity"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold">Recent Activity</h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={refreshData}
-                  disabled={isRefreshing}
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 mr-2 ${
-                      isRefreshing ? "animate-spin" : ""
-                    }`}
-                  />
-                  Refresh
-                </Button>
+    <div className="bg-gray-950 text-gray-200 min-h-screen font-sans">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-screen-2xl">
+        {/* Header */}
+        <motion.header
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 100, damping: 20 }}
+          className="sticky top-6 z-50 mb-8"
+        >
+          <div className="bg-gray-950/70 backdrop-blur-xl border border-gray-800 rounded-2xl flex items-center justify-between p-3.5 shadow-lg shadow-black/20">
+            {/* Left side: User Info */}
+            <div className="flex items-center space-x-3">
+              <img
+                src={farcasterUser?.pfp_url}
+                alt={farcasterUser?.display_name}
+                className="w-10 h-10 rounded-full"
+              />
+              <div>
+                <h1 className="font-semibold text-white">
+                  {farcasterUser?.display_name}
+                </h1>
+                <p className="text-xs text-gray-500">
+                  Welcome to your Dashboard
+                </p>
               </div>
+            </div>
+
+            {/* Right side: Actions */}
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={refreshData}
+                disabled={isRefreshing}
+                className="cursor-pointer text-gray-400 hover:text-white hover:bg-gray-800 w-10 h-10 rounded-full"
+              >
+                <RefreshCw
+                  className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`}
+                />
+              </Button>
+
+              <Button
+                onClick={() => setShowCreatePostModal(true)}
+                className="cursor-pointer bg-white text-gray-900 hover:bg-gray-200 font-bold py-2 px-4 rounded-full flex items-center space-x-0 sm:space-x-2 shadow-lg shadow-white/10 transition-all duration-300 transform hover:scale-105"
+              >
+                <Plus className="w-5 h-5" />
+                <span className="!hidden sm:!inline">Create</span>
+              </Button>
+            </div>
+          </div>
+        </motion.header>
+
+        <div className="space-y-8">
+          {/* Top Row: Controls & Connected Accounts */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0, transition: { delay: 0.1 } }}
+              className="lg:col-span-1 bg-gradient-to-br from-purple-600/30 to-indigo-600/30 border border-purple-500/30 rounded-2xl p-6 flex flex-col justify-between"
+            >
+              <div>
+                <h3 className="text-xl font-bold text-white">
+                  Automatic Crossposting
+                </h3>
+                <p className="text-purple-200/80 mt-1">
+                  {userData?.crosspostEnabled
+                    ? "Your new tweets will be posted to Farcaster."
+                    : "Turn on to sync your new tweets automatically."}
+                </p>
+              </div>
+              <div className="flex items-center justify-center mt-6">
+                <button
+                  onClick={toggleCrosspost}
+                  className={`cursor-pointer relative inline-flex items-center h-14 rounded-full w-28 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-950 focus:ring-purple-500 ${
+                    userData?.crosspostEnabled
+                      ? "bg-gradient-to-r from-purple-500 to-indigo-500 shadow-lg shadow-purple-500/30"
+                      : "bg-gray-700/50"
+                  }`}
+                >
+                  <motion.span
+                    layout
+                    transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                    className={`inline-flex items-center justify-center w-12 h-12 transform bg-white rounded-full m-1 transition-transform ${
+                      userData?.crosspostEnabled
+                        ? "translate-x-14"
+                        : "translate-x-0"
+                    }`}
+                  >
+                    {userData?.crosspostEnabled ? (
+                      <Check className="w-6 h-6 text-purple-600" />
+                    ) : (
+                      <Zap className="w-6 h-6 text-gray-400" />
+                    )}
+                  </motion.span>
+                </button>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0, transition: { delay: 0.2 } }}
+              className="lg:col-span-2 bg-gray-900/80 border border-gray-800 rounded-2xl p-6"
+            >
+              <h3 className="text-xl font-semibold text-white mb-4">
+                Connected Accounts
+              </h3>
               <div className="space-y-4">
-                {recentActivity.length > 0 ? (
-                  recentActivity.map((item) => (
-                    <ActivityItem key={item.id} item={item} />
-                  ))
-                ) : (
-                  <div className="text-center py-8">
-                    <Activity className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                    <p className="text-gray-600 dark:text-gray-400">
-                      No recent activity found
-                    </p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Start tweeting to see your cross-posting activity here
-                    </p>
-                  </div>
+                {isFarcasterAuthenticated && farcasterUser && (
+                  <ConnectedAccountCard
+                    platform="farcaster"
+                    user={farcasterUser}
+                    onDisconnect={handleFarcasterDisconnect}
+                  />
+                )}
+                {twitterUser && (
+                  <ConnectedAccountCard
+                    platform="twitter"
+                    user={twitterUser}
+                    onDisconnect={handleTwitterDisconnect}
+                  />
                 )}
               </div>
-            </Card>
-          </motion.div>
-        )}
+            </motion.div>
+          </div>
 
-        {activeTab === "schedule" && (
+          {/* Stats Section */}
           <motion.div
-            key="schedule"
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0, transition: { delay: 0.3 } }}
+            className="bg-gray-900/80 border border-gray-800 rounded-2xl p-6"
           >
-            <Card className="p-6 text-center">
-              <Calendar className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Schedule Posts</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Plan and schedule your cross-posts in advance
-              </p>
-              <Button size="lg" disabled>
-                <Calendar className="w-4 h-4 mr-2" />
-                Coming Soon
-              </Button>
-            </Card>
+            <h3 className="text-xl font-semibold text-white mb-4">
+              This Week's Stats
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard
+                icon={Activity}
+                label="Total Posts"
+                value={userStats?.totalPosts || 0}
+                color="blue"
+              />
+              <StatCard
+                icon={Zap}
+                label="Cross-Posts"
+                value={userStats?.crossPosts || 0}
+                color="purple"
+              />
+              <StatCard
+                icon={TrendingUp}
+                label="Engagement"
+                value={`0%`}
+                color="green"
+              />
+              <StatCard
+                icon={Users}
+                label="Followers"
+                value={(userStats?.totalFollowers || 0).toLocaleString()}
+                color="orange"
+              />
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+
+          {/* Recent Activity */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0, transition: { delay: 0.4 } }}
+            className="lg:col-span-8 space-y-4"
+          >
+            <h3 className="text-xl font-semibold text-white mb-4">
+              Recent Activity
+            </h3>
+            <div className="space-y-4">
+              {recentActivity.length > 0 ? (
+                recentActivity.map((item) => (
+                  <ActivityItem key={item.id} item={item} />
+                ))
+              ) : (
+                <div className="text-center py-16 bg-gray-900/80 border border-gray-800 rounded-2xl">
+                  <Activity className="w-12 h-12 mx-auto text-gray-600 mb-4" />
+                  <p className="text-gray-400">No recent activity found</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Start tweeting to see your cross-posting activity here
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Create Post Modal */}
+        <AnimatePresence>
+          {showCreatePostModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCreatePostModal(false)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-[1000]"
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                exit={{ scale: 0.9, y: 20, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-gray-900 border border-gray-800 rounded-2xl p-6 max-w-xl w-full mx-4 shadow-2xl"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-white">
+                    Create Crosspost
+                  </h2>
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1 text-sm bg-gray-800 px-3 py-1 rounded-full">
+                      <Twitter className="w-4 h-4 text-blue-400" />
+                      <span className="text-gray-300">Twitter</span>
+                    </div>
+                    <div className="flex items-center space-x-1 text-sm bg-gray-800 px-3 py-1 rounded-full">
+                      <MessageCircle className="w-4 h-4 text-purple-400" />
+                      <span className="text-gray-300">Farcaster</span>
+                    </div>
+                  </div>
+                </div>
+
+                <textarea
+                  placeholder="What's happening?"
+                  className="w-full bg-gray-800 text-gray-200 rounded-lg p-4 focus:ring-2 focus:ring-purple-500 border border-gray-700"
+                  rows={6}
+                  value={crosscastText}
+                  onChange={(e) => setCrosscastText(e.target.value)}
+                  required
+                />
+
+                <div className="flex justify-between items-center mt-4">
+                  <div className="text-sm text-gray-500">
+                    280 characters remaining
+                  </div>
+                  <CrosscastButton
+                    userId={userData?.id}
+                    tweetText={crosscastText}
+                    // tweetUrl="Optional tweet URL"
+                    signerUuid={farcasterUser?.signer_uuid}
+                  />
+                  {/* <Button className="cursor-pointer bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-full shadow-lg shadow-purple-600/20">
+                    Post
+                  </Button> */}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

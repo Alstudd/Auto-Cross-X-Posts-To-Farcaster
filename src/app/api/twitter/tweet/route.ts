@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
     const tweet = await client.v2.tweet(text);
 
-    return NextResponse.json({ success: true, tweet });
+    return NextResponse.json({ success: true, tweet: tweet.data });
   } catch (error) {
     console.error("Error posting tweet:", error);
     const errorMsg =
