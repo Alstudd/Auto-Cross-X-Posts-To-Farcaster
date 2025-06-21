@@ -4,8 +4,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
   Twitter,
   MessageCircle,
@@ -37,6 +37,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { NeynarAuthButton, useNeynarContext } from "@neynar/react";
 import { CrosscastButton } from "@/components/CrosscastButton";
+import ScrollSections from "@/components/scroll-section";
 
 interface TwitterUser {
   id: string;
@@ -98,6 +99,21 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
+
+
+  const { scrollY } = useScroll()
+  const y1 = useTransform(scrollY, [0, 1000], [0, -200])
+  const y2 = useTransform(scrollY, [0, 1000], [0, -100])
+  const opacity = useTransform(scrollY, [0, 300], [1, 0])
+  useEffect(() => {
+    // Smooth scrolling
+    const handleScroll = () => {
+      document.documentElement.style.scrollBehavior = "smooth"
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   // Initialize user when both accounts are connected
   useEffect(() => {
@@ -564,139 +580,214 @@ export default function Home() {
   if (!isConnected) {
     return (
       <>
-        <div className="w-full bg-[#F3F0ED] h-screen relative flex flex-col justify-center items-center text-center px-4">
-          {/* Top Left Logo */}
-          <div className="absolute top-14 left-14 text-2xl font-semibold tracking-widest text-black z-50">
-            CROSSPOST
-          </div>
-          {/* Top Right Get Started Button */}
-          <div className="absolute top-14 right-14 text-lg text-gray-700 text-right z-50">
-            <button
-              onClick={() => setShowModal(true)}
-              className="hover:text-black transition-colors cursor-pointer"
-            >
-              Get Started
-            </button>
-            <div
-              className="mt-1 w-full h-[2px] bg-no-repeat bg-center bg-contain"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='6' viewBox='0 0 60 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 3 Q15 0 30 3 T60 3' fill='transparent' stroke='black' stroke-width='1.2'/%3E%3C/svg%3E")`,
-              }}
-            ></div>
-          </div>
-          {/* Main Message */}
-          <div className="z-50">
-            <h1 className="text-5xl mb-2 text-black">Noice Crosspost</h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-10 text-2xl">
-              Sync your tweets to Farcaster automatically
-            </p>
-            <div className="text-2xl animate-bounce text-gray-700">↓</div>
-          </div>
-          {/* Bottom Wave Image */}
-          <img
-            src="https://cdn.prod.website-files.com/56d8a8f1100bc1bb7928eebd/58458c90a39ccfdb4c175922_HECO_LINE_ANIMATION_v04-poster-00001.jpg"
-            alt="Wave pattern"
-            className="absolute bottom-0 left-0 w-full object-cover"
-          />
-        </div>
-        {/* Modal */}
-        <AnimatePresence>
-          {showModal && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowModal(false)}
-              className="fixed inset-0 bg-opacity-50 backdrop-blur-3xl flex items-center justify-center z-[1000]"
-            >
-              <motion.div
-                initial={{ scale: 0.95, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.95, y: 20 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center"
-              >
-                <h2 className="text-2xl font-semibold mb-4 text-black dark:text-white">
-                  Let&apos;s Get You Started
-                </h2>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Connect your Twitter and Farcaster accounts to begin
-                  crossposting.
-                </p>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 rounded-lg border">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-full bg-purple-100 text-purple-600">
-                        <MessageCircle className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Farcaster</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {isFarcasterAuthenticated
-                            ? "Connected"
-                            : "Not connected"}
-                        </p>
-                      </div>
-                    </div>
-                    {!isFarcasterAuthenticated && <NeynarAuthButton />}
-                    {isFarcasterAuthenticated && (
-                      <div className="flex items-center text-green-600">
-                        <Check className="w-5 h-5" />
-                      </div>
-                    )}
-                  </div>
+        {/* Hero Section */}
+        <div className="w-full bg-[#F5F2EE] min-h-screen relative overflow-hidden">
+          {/* Parallax Background Elements */}
+          <motion.div style={{ y: y1 }} className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-black/10 rounded-full"></div>
+            <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-black/5 rounded-full"></div>
+          </motion.div>
 
-                  <div className="flex items-center justify-between p-4 rounded-lg border">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-full bg-blue-100 text-blue-500">
-                        <Twitter className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Twitter</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {twitterUser ? "Connected" : "Not connected"}
-                        </p>
-                      </div>
-                    </div>
-                    {!twitterUser && (
-                      <Button
-                        onClick={handleTwitterConnect}
-                        disabled={isTwitterLoading}
-                        size="sm"
-                      >
-                        {isTwitterLoading ? "Connecting..." : "Connect"}
-                      </Button>
-                    )}
-                    {twitterUser && (
-                      <div className="flex items-center text-green-600">
-                        <Check className="w-5 h-5" />
-                      </div>
-                    )}
-                  </div>
+          {/* Header */}
+          <motion.header
+            style={{ opacity }}
+            className="absolute top-0 left-0 right-0 z-50 flex justify-between items-center p-14"
+          >
+            <div className="text-2xl font-bold tracking-[0.2em] text-black">CROSSPOST</div>
+            <div className="text-right">
+              <button
+                onClick={() => setShowModal(true)}
+                className="text-lg text-gray-700 hover:text-black transition-colors cursor-pointer relative group"
+              >
+                Get Started
+                <div className="absolute -bottom-1 left-0 w-full h-[2px] bg-black transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left">
+                  <svg width="100%" height="2" viewBox="0 0 100 2" className="absolute top-0 left-0">
+                    <path d="M0 1 Q25 0 50 1 T100 1" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                  </svg>
                 </div>
-                {/* Success Message */}
-                {isFarcasterAuthenticated && twitterUser && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
-                  >
-                    <p className="text-green-700 dark:text-green-300 text-sm">
-                      🎉 Both accounts connected! You can now close this modal.
-                    </p>
-                  </motion.div>
-                )}
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="mt-6 px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                >
-                  Close
-                </button>
-              </motion.div>
+              </button>
+            </div>
+          </motion.header>
+
+          {/* Main Content */}
+          <div className="flex flex-col justify-center items-center min-h-screen text-center px-4 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              style={{ y: y2 }}
+              className="max-w-4xl"
+            >
+              <h1 className="text-6xl md:text-7xl lg:text-8xl font-light text-black mb-8 leading-tight">
+                We sync your tweets to
+                <br />
+                <span className="font-normal">Farcaster automatically</span>
+              </h1>
+              <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
+                Create dynamic cross-platform presence that helps your content reach new audiences.
+              </p>
             </motion.div>
-          )}
-        </AnimatePresence>
+
+            {/* Scroll Indicator */}
+            <motion.div
+              animate={{ y: [0, 10, 0] }}
+              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+              className="absolute bottom-20 text-2xl text-gray-400"
+            >
+              ↓
+            </motion.div>
+          </div>
+
+          {/* Animated Wave Graphics */}
+          <motion.div style={{ y: y1 }} className="absolute bottom-0 left-0 right-0 h-1/2 overflow-hidden">
+            <svg className="absolute bottom-0 w-full h-full" viewBox="0 0 1200 600" preserveAspectRatio="none">
+              <defs>
+                <pattern id="wavePattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M0 20 Q10 10 20 20 T40 20" fill="none" stroke="black" strokeWidth="0.5" opacity="0.3" />
+                </pattern>
+              </defs>
+
+              {/* Main flowing waves */}
+              <motion.path
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 3, delay: 0.5 }}
+                d="M0 400 Q300 300 600 400 T1200 400 L1200 600 L0 600 Z"
+                fill="black"
+                opacity="0.9"
+              />
+              <motion.path
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 3, delay: 0.7 }}
+                d="M0 450 Q200 350 400 450 Q600 550 800 450 Q1000 350 1200 450 L1200 600 L0 600 Z"
+                fill="black"
+                opacity="0.7"
+              />
+              <motion.path
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 3, delay: 0.9 }}
+                d="M0 500 Q150 400 300 500 Q450 600 600 500 Q750 400 900 500 Q1050 600 1200 500 L1200 600 L0 600 Z"
+                fill="black"
+                opacity="0.5"
+              />
+
+              {/* Detailed line work */}
+              {Array.from({ length: 20 }).map((_, i) => (
+                <motion.path
+                  key={i}
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 0.2 }}
+                  transition={{ duration: 2, delay: 1 + i * 0.1 }}
+                  d={`M${i * 60} ${420 + Math.sin(i) * 20} Q${i * 60 + 30} ${400 + Math.sin(i + 1) * 20} ${i * 60 + 60} ${420 + Math.sin(i + 2) * 20}`}
+                  fill="none"
+                  stroke="black"
+                  strokeWidth="1"
+                />
+              ))}
+            </svg>
+          </motion.div>
+        </div>
+
+
+        <ScrollSections />
+
+      {/* Modal */}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowModal(false)}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[1000]"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 20, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl"
+            >
+              <h2 className="text-3xl font-light mb-2 text-black text-center">Let Get Started</h2>
+              <p className="text-gray-600 mb-8 text-center leading-relaxed">
+                Connect your accounts to begin seamless crossposting between platforms.
+              </p>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-6 rounded-2xl border border-gray-100 bg-gray-50/50">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 rounded-full bg-purple-100">
+                      <MessageCircle className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-black">Farcaster</h3>
+                      <p className="text-sm text-gray-500">
+                        {isFarcasterAuthenticated ? "Connected" : "Not connected"}
+                      </p>
+                    </div>
+                  </div>
+                  {!isFarcasterAuthenticated && <NeynarAuthButton className="text-white bg-black rounded-xl px-2 cursor-pointer" />}
+                  {isFarcasterAuthenticated && (
+                    <div className="flex items-center text-green-600">
+                      <Check className="w-5 h-5" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between p-6 rounded-2xl border border-gray-100 bg-gray-50/50">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 rounded-full bg-blue-100">
+                      <Twitter className="w-5 h-5 text-blue-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-black">Twitter</h3>
+                      <p className="text-sm text-gray-500">{twitterUser ? "Connected" : "Not connected"}</p>
+                    </div>
+                  </div>
+                  {!twitterUser && (
+                    <Button
+                      onClick={handleTwitterConnect}
+                      disabled={isTwitterLoading}
+                      size="sm"
+                      className="bg-black text-white hover:bg-gray-800 cursor-pointer"
+                    >
+                      {isTwitterLoading ? "Connecting..." : "Connect"}
+                    </Button>
+                  )}
+                  {twitterUser && (
+                    <div className="flex items-center text-green-600">
+                      <Check className="w-5 h-5" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Success Message */}
+              {isFarcasterAuthenticated && twitterUser && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 p-4 bg-green-50 rounded-2xl border border-green-100"
+                >
+                  <p className="text-green-700 text-sm text-center">
+                    🎉 Both accounts connected! Youre ready to start crossposting.
+                  </p>
+                </motion.div>
+              )}
+
+              <button
+                onClick={() => setShowModal(false)}
+                className="mt-8 w-full py-3 bg-gray-100 text-gray-700 rounded-2xl hover:bg-gray-200 transition-colors font-medium"
+              >
+                Close
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       </>
     );
   }
