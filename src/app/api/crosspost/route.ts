@@ -4,6 +4,20 @@ import axios from "axios";
 import { NeynarAPIClient, Configuration } from "@neynar/nodejs-sdk";
 import { User } from "@prisma/client";
 
+function removeLastUrl(text: string) {
+  const urlRegex = /https?:\/\/[^\s]+/g;
+  const urls = text.match(urlRegex);
+  if (!urls || urls.length === 0) {
+    return text;
+  }
+  const lastUrl = urls[urls.length - 1];
+  const lastIndex = text.lastIndexOf(lastUrl);
+  let result =
+    text.substring(0, lastIndex) + text.substring(lastIndex + lastUrl.length);
+  result = result.replace(/\s+/g, " ").trim();
+  return result;
+}
+
 async function fetchLatestTweet(user: User) {
   const url = `https://twitter241.p.rapidapi.com/user-tweets?user=${user.twitterUserId}&count=1`;
   const headers = {
@@ -18,11 +32,23 @@ async function fetchLatestTweet(user: User) {
         const content = entry.content?.itemContent?.tweet_results?.result;
         if (content) {
           const tweetId = content.rest_id;
-          const tweetText = content.legacy?.full_text;
+          let tweetText = content.legacy?.full_text;
           const tweetTimestamp = content.legacy?.created_at
             ? new Date(content.legacy.created_at)
             : null;
-          return { tweetId, tweetText, tweetTimestamp };
+          const mediaArr = content.legacy?.entities?.media;
+          const embeds = [];
+          if (mediaArr && mediaArr.length > 0) {
+            for (const media of mediaArr) {
+              if (media?.media_url_https) {
+                embeds.push({
+                  url: media?.media_url_https,
+                });
+              }
+            }
+          }
+          tweetText = removeLastUrl(tweetText);
+          return { tweetId, tweetText, tweetTimestamp, embeds };
         }
       }
     }
@@ -32,6 +58,7 @@ async function fetchLatestTweet(user: User) {
 
 async function crosspostForUser(user: User) {
   const latest = await fetchLatestTweet(user);
+  console.log(latest);
   if (!latest || latest.tweetId === user.lastTweetId) return null;
   if (
     user.lastTweetTimestamp &&
@@ -47,6 +74,7 @@ async function crosspostForUser(user: User) {
   const farcasterRes = await neynarClient.publishCast({
     signerUuid: user.farcasterSignerUuid,
     text: latest.tweetText,
+    embeds: latest.embeds,
   });
 
   // Store post in DB
